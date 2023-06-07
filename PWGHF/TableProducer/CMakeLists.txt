@@ -28,6 +28,15 @@ o2physics_add_dpl_workflow(candidate-creator-dstar
                     SOURCES candidateCreatorDstar.cxx
                     PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
                     COMPONENT_NAME Analysis)
+                    
+o2physics_add_dpl_workflow(candidate-creator-dstar-3
+                    SOURCES candidateCreatorDstar3.cxx
+                    PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
+                    COMPONENT_NAME Analysis)
+o2physics_add_dpl_workflow(testing-partition-loop
+                    SOURCES TestingPartitionInLoop.cxx
+                    PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
+                    COMPONENT_NAME Analysis)
 
 o2physics_add_dpl_workflow(tree-creator-d0-to-k-pi
                     SOURCES treeCreatorD0ToKPi.cxx
