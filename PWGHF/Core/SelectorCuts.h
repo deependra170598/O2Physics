@@ -867,38 +867,37 @@ static const std::vector<std::string> labelsCutVar = {"m", "CPA", "d0 Jpsi", "d0
 
 namespace hf_cuts_DStar_to_D0_Pi
 {
-  static constexpr int nBinsPt = 11;
-  static constexpr int nCutVars =4;
-  // default values for the pT bin edges (can be used to configure histogram axis)
-  // offset by 1 from the bin numbers in cuts array
-  constexpr double binsPt[nBinsPt + 1] ={
-    1.0,
-    1.5,
-    2.0,
-    2.5,
-    3.0,
-    3.5,
-    4.0,
-    4.5,
-    5.0,
-    5.5,
-    6.0,
-    6.5
-  };
-  auto vecBinsPt = std::vector<double>{binsPt, binsPt + nBinsPt + 1};
-  // default values for the cuts
-  constexpr double cuts[nBinsPt][nCutVars] ={{0.05,0.3,0.4,0.4},
-                                             {0.05,0.3,0.4,0.4},
-                                             {0.05,0.4,0.9,0.9},
-                                             {0.05,0.4,0.9,0.9},
-                                             {0.05,0.6,0.9,0.9},
-                                             {0.05,0.6,1.0,1.0},
-                                             {0.05,0.6,1.0,1.0},
-                                             {0.05,100,1.0,1.0},
-                                             {0.05,100,1.0,1.0},
-                                             {0.05,100,1.0,1.0},
-                                             {0.05,100,1.0,1.0}};
-  // row labels
+static constexpr int nBinsPt = 11;
+static constexpr int nCutVars = 4;
+// default values for the pT bin edges (can be used to configure histogram axis)
+// offset by 1 from the bin numbers in cuts array
+constexpr double binsPt[nBinsPt + 1] = {
+  1.0,
+  1.5,
+  2.0,
+  2.5,
+  3.0,
+  3.5,
+  4.0,
+  4.5,
+  5.0,
+  5.5,
+  6.0,
+  6.5};
+auto vecBinsPt = std::vector<double>{binsPt, binsPt + nBinsPt + 1};
+// default values for the cuts
+constexpr double cuts[nBinsPt][nCutVars] = {{0.05, 0.3, 0.4, 0.4},
+                                            {0.05, 0.3, 0.4, 0.4},
+                                            {0.05, 0.4, 0.9, 0.9},
+                                            {0.05, 0.4, 0.9, 0.9},
+                                            {0.05, 0.6, 0.9, 0.9},
+                                            {0.05, 0.6, 1.0, 1.0},
+                                            {0.05, 0.6, 1.0, 1.0},
+                                            {0.05, 100, 1.0, 1.0},
+                                            {0.05, 100, 1.0, 1.0},
+                                            {0.05, 100, 1.0, 1.0},
+                                            {0.05, 100, 1.0, 1.0}};
+// row labels
 static const std::vector<std::string> labelsPt = {
   "pT bin 0",
   "pT bin 1",
@@ -912,7 +911,7 @@ static const std::vector<std::string> labelsPt = {
   "pT bin 9",
   "pT bin 10"};
 // column labels
-static const std::vector<std::string> labelsCutVar = {"min_pT_soft_pi", "max_pT_soft_pi", "min_pT_prong0","min_pT_prong1"};
+static const std::vector<std::string> labelsCutVar = {"min_pT_soft_pi", "max_pT_soft_pi", "min_pT_prong0", "min_pT_prong1"};
 } // namespace hf_cuts_DStar_to_D0_Pi
 
 } // namespace o2::analysis
