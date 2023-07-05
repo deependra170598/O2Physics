@@ -29,7 +29,13 @@ struct HfCandidateCreatorDstar{
     // topological cuts
     Configurable<std::vector<double>> binsPt{"binsPt",std::vector<double>{hf_cuts_DStar_to_D0_Pi::vecBinsPt},"pT bin limits"};
     Configurable<LabeledArray<double>> ConfCuts{"ConfCuts",{hf_cuts_DStar_to_D0_Pi::cuts[0],nBinsPt,nCutVars,labelsPt,labelsCutVar},"DStar candidate selection per pT bin"};
-    ConfigurableAxis DeltaInvMassAxis{"DeltaInvMassAxis",{100,0.13,0.16},"Delta_M_Star invariant mass axis"};
+
+    ConfigurableAxis DStarInvMassAxis{"DStarInvMassAxis",{500,0.0,5.0},"DStar Invarient mass axis"};
+    ConfigurableAxis DeltaInvMassAxis{"DeltaInvMassAxis",{500,0.13,0.16},"Delta_M_Star invariant mass axis"};
+    ConfigurableAxis DStarEtaAxis{"DStarEtaAxis",{500,-0.8,0.8},"DStar Eta Axis"};
+    ConfigurableAxis DStarPhiAxis{"DStarPhiAxis",{500,-2*PI,2*PI},"DStar Phi Axis"};
+    ConfigurableAxis DStarPtAxis{"DStarPtAxis",{500,0.0,5.0},"DStar pT Axis"};
+
     Configurable<float> DCAXY_Threshold_of_SoftPi{"DCAXYThresholdOfSoftPi",0.2f,"Maximum DCAXY value for soft pi"};
     Configurable<float> DCAZ_Threshold_of_SoftPi{"DCAZThresholdOfSoftPi",0.2f,"Maximum DCAZ value for soft pi"};
 
@@ -41,15 +47,21 @@ struct HfCandidateCreatorDstar{
 
 
     void init(InitContext &){
-        AxisSpec DeltaInvMassAxisSpec={DeltaInvMassAxis,"#Delta M (GeV/c^2)"};
-        DStarRegistry.add("DStarInvMass","DStarInvMass",{kTH1D,{{500,0.0,5.0}}});
-        DStarRegistry.add("AllTrackPt","AllTrackPt",{kTH1D,{{500,0.0,5.0}}});
-        DStarRegistry.add("D0Pt","D0Pt",{kTH1D,{{100,0.0,5.0}}});
-        DStarRegistry.add("DeltaMStar","DeltaMStar",{kTH1D,{DeltaInvMassAxis}});
+        AxisSpec DStarInvMassAxisSpec={DStarInvMassAxis,"#it{M}_{inv} (GeV/c^2) "};
+        AxisSpec DeltaInvMassAxisSpec={DeltaInvMassAxis,"#Delta M_{inv} (GeV/c^2)"};
+        AxisSpec DStarEtaAxisSpec={DStarEtaAxis,"#eta"};
+        AxisSpec DStarPhiAxisSpec={DStarPhiAxis,"#phi (rad)"};
+        AxisSpec DStarPtAxisSpec={DStarPtAxis,"#it{p}_{T} (GeV/#it{c})"};
+
+        DStarRegistry.add("DStarInvMass","#it{M}_{inv} of D*",{kTH1D,{DStarInvMassAxisSpec}},true);
+        DStarRegistry.add("DStar_Eta", "#eta distribution of reconstructed D*", {kTH1D, {DStarEtaAxisSpec}},true);
+        DStarRegistry.add("DStar_phi", "#phi distribution of reconstructed D*", {kTH1D, {DStarPhiAxisSpec}},true);
+        DStarRegistry.add("DStarPt", "#it{p}_{T} distribution of reconstructed D*", {kTH1D, {DStarPtAxisSpec}},true);
+        DStarRegistry.add("DeltaMStar","#Delta M_{inv} distribution of reconstructed D* for inclusive #it{p}_{T}",{kTH1D,{DeltaInvMassAxisSpec}},true);
         for(int i=0;i<nBinsPt;i++){
             std::string HistName="DifferentPTBins/InvMassDeltMDStar_"+static_cast<std::string>(ptBins[i]);
-            std::string HistTitle="InvMassDeltMDStar_#"+std::to_string(i);
-            DStarRegistry.add(HistName.c_str(),HistTitle.c_str(),{kTH1D,{DeltaInvMassAxis}});
+            std::string HistTitle="#Delta #it{M}_{inv} of D* for #it{p}_{T} bin #"+std::to_string(i);
+            DStarRegistry.add(HistName.c_str(),HistTitle.c_str(),{kTH1D,{DeltaInvMassAxisSpec}},true);
         }
     }
     static constexpr std::string_view ptBins[nBinsPt] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9","10"};
@@ -205,7 +217,7 @@ struct HfCandidateCreatorDstar{
                     }else if(d0.isSelD0bar()>=1 && d0.isSelD0()<1 && t.sign()<0){             //
                         massD0= d0.m(array{masska,massPi});                                   //
                     }else if(d0.isSelD0()>=1 && d0.isSelD0bar()>=1){                          //
-                        //need to change it.  It is not coorect                               //
+                    // For time being we are considering it as D0 but need to change it. It is not coorect. What is solution?                                //
                         massD0= d0.m(array{massPi,masska});                                   //
                     }                                                                         //
 //=============================================================================================
@@ -213,16 +225,24 @@ struct HfCandidateCreatorDstar{
                     double massDStar = RecoDecay::m(std::array{pVect, pVecD0}, std::array{massPi, massD0});
                     auto DeltaMDStar = RecoDecay::m(std::array{pVect, pVecD0}, std::array{massPi, massD0}) - massD0;
                     
-                    // Filling Hist
-                    DStarRegistry.fill(HIST("AllTrackPt"),t.pt());
-                    DStarRegistry.fill(HIST("D0Pt"),d0.pt());
-                    DStarRegistry.fill(HIST("DStarInvMass"),massDStar);
-                    DStarRegistry.fill(HIST("DeltaMStar"),DeltaMDStar);
+                    // Filling InvMass Hist
+                    DStarRegistry.fill(HIST("DStarInvMass"), massDStar);
+                    DStarRegistry.fill(HIST("DeltaMStar"), DeltaMDStar);
 
+                    // Find momentum of DStar
+                    auto Dstar_px = t.px() + d0.px();
+                    auto Dstar_py = t.py() + d0.py();
+                    auto Dstar_pz = t.pz()+ d0.pz();
 
-                    auto Dstar_px=t.px()+d0.px();
-                    auto Dstar_py=t.py()+d0.py();
-                    auto DStar_pT=sqrt(Dstar_px*Dstar_px + Dstar_py*Dstar_py);
+                    auto DStar_pT = sqrt(Dstar_px * Dstar_px + Dstar_py * Dstar_py);
+                    auto DStar_P = sqrt(Dstar_px * Dstar_px + Dstar_py * Dstar_py + Dstar_pz*Dstar_pz);
+                    // auto DStar_E = sqrt(pow(DStar_P,2) + pow(massDStar,2));
+                    auto DStar_eta = 0.5*log((DStar_P+Dstar_pz)/(DStar_P-Dstar_pz));
+                    auto DStar_phi = atan2(Dstar_py,Dstar_px);
+
+                    DStarRegistry.fill(HIST("DStarPt"), DStar_pT);
+                    DStarRegistry.fill(HIST("DStar_Eta"), DStar_eta);
+                    DStarRegistry.fill(HIST("DStar_phi"), DStar_phi);
                     
                     // Filling pT bin wise
                     if(i==0 && DStar_pT>binsPt->at(i) && DStar_pT<binsPt->at(i+1)){
