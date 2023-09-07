@@ -63,6 +63,11 @@ o2physics_add_dpl_workflow(candidate-creator-dstar-2
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
                     COMPONENT_NAME Analysis)
 
+o2physics_add_dpl_workflow(candidate-creator-dstar-3
+                    SOURCES candidateCreatorDstar3.cxx
+                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
+                    COMPONENT_NAME Analysis)
+
 o2physics_add_dpl_workflow(candidate-creator-lb
                     SOURCES candidateCreatorLb.cxx
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2::DCAFitter
