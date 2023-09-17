@@ -23,10 +23,10 @@ o2physics_add_dpl_workflow(refit-pv-dummy
 
 # Candidate creators
 
-#o2physics_add_dpl_workflow(candidate-creator-2prong
- #                   SOURCES candidateCreator2Prong.cxx
-  #                  PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2::DCAFitter
-   #                 COMPONENT_NAME Analysis)
+o2physics_add_dpl_workflow(candidate-creator-2prong
+                    SOURCES candidateCreator2Prong.cxx
+                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2::DCAFitter
+                    COMPONENT_NAME Analysis)
 
 o2physics_add_dpl_workflow(candidate-creator-3prong
                     SOURCES candidateCreator3Prong.cxx
@@ -70,6 +70,16 @@ o2physics_add_dpl_workflow(candidate-creator-dstar-3
 
 o2physics_add_dpl_workflow(candidate-creator-dstar-4
                     SOURCES candidateCreatorDstar4.cxx
+                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2::DCAFitter
+                    COMPONENT_NAME Analysis)
+
+#o2physics_add_dpl_workflow(candidate-creator-dstar-5
+ #                   SOURCES candidateCreatorDstar5.cxx
+  #                  PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2::DCAFitter
+   #                 COMPONENT_NAME Analysis)
+
+o2physics_add_dpl_workflow(candidate-creator-dstar-6
+                    SOURCES candidateCreatorDstar6.cxx
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2::DCAFitter
                     COMPONENT_NAME Analysis)
 
