@@ -103,7 +103,7 @@ DECLARE_SOA_TABLE(HfSelD0Alice3Forward, "AOD", "HFSELD0A3F", //!
 
 namespace hf_sel_candidate_dplus
 {
-DECLARE_SOA_COLUMN(IsSelDplusToPiKPi, isSelDplusToPiKPi, int); //!
+DECLARE_SOA_COLUMN(IsSelDplusToPiKPi, isSelDplusToPiKPi, int);                  //!
 DECLARE_SOA_COLUMN(MlProbDplusToPiKPi, mlProbDplusToPiKPi, std::vector<float>); //!
 } // namespace hf_sel_candidate_dplus
 DECLARE_SOA_TABLE(HfSelDplusToPiKPi, "AOD", "HFSELDPLUS", //!
@@ -113,8 +113,8 @@ DECLARE_SOA_TABLE(HfMlDplusToPiKPi, "AOD", "HFMLDPLUS", //!
 
 namespace hf_sel_candidate_ds
 {
-DECLARE_SOA_COLUMN(IsSelDsToKKPi, isSelDsToKKPi, int); //!
-DECLARE_SOA_COLUMN(IsSelDsToPiKK, isSelDsToPiKK, int); //!
+DECLARE_SOA_COLUMN(IsSelDsToKKPi, isSelDsToKKPi, int);                  //!
+DECLARE_SOA_COLUMN(IsSelDsToPiKK, isSelDsToPiKK, int);                  //!
 DECLARE_SOA_COLUMN(MlProbDsToKKPi, mlProbDsToKKPi, std::vector<float>); //!
 } // namespace hf_sel_candidate_ds
 DECLARE_SOA_TABLE(HfSelDsToKKPi, "AOD", "HFSELDS", //!
@@ -304,7 +304,7 @@ DECLARE_SOA_TABLE(HfSelB0ToDPi, "AOD", "HFSELB0", //!
 
 namespace hf_sel_candidate_bs
 {
-DECLARE_SOA_COLUMN(IsSelBsToDsPi, isSelBsToDsPi, int); //!
+DECLARE_SOA_COLUMN(IsSelBsToDsPi, isSelBsToDsPi, int);                  //!
 DECLARE_SOA_COLUMN(MlProbBsToDsPi, mlProbBsToDsPi, std::vector<float>); //!
 
 /// Apply topological cuts as defined in SelectorCuts.h

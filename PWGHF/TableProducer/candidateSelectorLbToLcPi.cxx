@@ -65,7 +65,7 @@ struct HfCandidateSelectorLbToLcPi {
       return false;
     }
 
-    //Λb0 mass cut
+    // Λb0 mass cut
     if (std::abs(invMassLbToLcPi(hfCandLb) - RecoDecay::getMassPDG(pdg::Code::kLambdaB0)) > cuts->get(pTBin, "m")) {
       // LOGF(debug, "Lb topol selection failed at mass diff check");
       return false;

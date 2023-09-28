@@ -2125,6 +2125,69 @@ DECLARE_SOA_TABLE(HfCandScMcGen, "AOD", "HFCANDSCMCGEN", //!
                   hf_cand_sigmac::FlagMcMatchGen,
                   hf_cand_sigmac::OriginMcGen);
 
+/// D*(+) --> D0 + π(+)
+namespace HFCandDStarProng
+{
+DECLARE_SOA_INDEX_COLUMN_FULL(ProngPi, prongPi, int, Tracks, "");         // Softpi Index
+DECLARE_SOA_INDEX_COLUMN_FULL(ProngD0, prondD0, int, HfCand2Prong, "_0"); // D0 Index
+DECLARE_SOA_COLUMN(CandDStarP, candDStarp, float);
+DECLARE_SOA_COLUMN(CandDStarPx, candDStarpx, float);
+DECLARE_SOA_COLUMN(CandDStarPy, candDStarpy, float);
+DECLARE_SOA_COLUMN(CandDStarPz, candDStarpz, float);
+DECLARE_SOA_COLUMN(CandDStarPt, candDStarpt, float);
+DECLARE_SOA_DYNAMIC_COLUMN(CandDStarPVec, candDStarPVec, [](float px, float py, float pz) -> std::array<float, 3> { return std::array{px, py, pz}; });
+
+DECLARE_SOA_COLUMN(D0Px, d0px, float);
+DECLARE_SOA_COLUMN(D0Py, d0py, float);
+DECLARE_SOA_COLUMN(D0Pz, d0pz, float);
+DECLARE_SOA_DYNAMIC_COLUMN(D0PVec, d0PVec, [](float px, float py, float pz) -> std::array<float, 3> { return std::array{px, py, pz}; });
+
+// Inv Masses
+DECLARE_SOA_DYNAMIC_COLUMN(DStarMass, dstarmass,
+                           [](float pxPi, float pyPi, float pzPi, float pxD0, float pyD0, float pzD0, const std::array<double, 2>& m) -> float { return RecoDecay::m(std::array{std::array{pxPi, pyPi, pzPi}, std::array{pxD0, pyD0, pzD0}}, m); });
+
+// SoftPiProng
+DECLARE_SOA_COLUMN(ImpParamSoftPiProng, impParamSoftPiProng, float);
+DECLARE_SOA_COLUMN(ErrorImpParamSoftPiProng, errorImpParamSoftPiProng, float);
+DECLARE_SOA_DYNAMIC_COLUMN(NormalisedImpParamSoftPiProng, normalisedImpParamSoftPiProng,
+                           [](float dca, float err) -> float { return dca / err; });
+DECLARE_SOA_COLUMN(PxSoftpiProng, pxSoftpiProng, float);
+DECLARE_SOA_COLUMN(PySoftpiProng, pySoftpiProng, float);
+DECLARE_SOA_COLUMN(PzSoftpiProng, pzSoftpiProng, float);
+DECLARE_SOA_DYNAMIC_COLUMN(SoftPiPvec, softPiPvec, [](float px, float py, float pz) -> std::array<float, 3> { return std::array{px, py, pz}; });
+} // namespace HFCandDStarProng
+
+DECLARE_SOA_TABLE(HfCandDStarBase, "AOD", "HFDSTARCAND",
+                  o2::soa::Index<>,
+                  hf_cand::CollisionId,
+                  HFCandDStarProng::ProngPiId,
+
+                  // Doubt: What if we switch comment on the following two columns? What effect?
+                  //  hf_track_index::ProngD0Id,  // Index column to Hf2Prongs table filled by indexSkimcreator
+                  HFCandDStarProng::ProngD0Id, // Index column to HfCand2Prong table filled by candidateCreator2Prong
+
+                  // hf_track_index::FlagDstarToD0Pi,
+                  HFCandDStarProng::CandDStarPx,
+                  HFCandDStarProng::CandDStarPy,
+                  HFCandDStarProng::CandDStarPz,
+                  HFCandDStarProng::CandDStarP,
+                  HFCandDStarProng::CandDStarPt,
+                  // Primary vertex
+                  collision::PosX, collision::PosY, collision::PosZ,
+
+                  // Softpi
+                  HFCandDStarProng::PxSoftpiProng, HFCandDStarProng::PySoftpiProng, HFCandDStarProng::PzSoftpiProng,
+                  HFCandDStarProng::ImpParamSoftPiProng, HFCandDStarProng::ErrorImpParamSoftPiProng,
+                  // D0 momenta
+                  HFCandDStarProng::D0Px, HFCandDStarProng::D0Py, HFCandDStarProng::D0Pz,
+
+                  // ................Dynamic columns ..................................................
+                  HFCandDStarProng::NormalisedImpParamSoftPiProng<HFCandDStarProng::ImpParamSoftPiProng, HFCandDStarProng::ErrorImpParamSoftPiProng>,
+                  HFCandDStarProng::DStarMass<HFCandDStarProng::PxSoftpiProng, HFCandDStarProng::PySoftpiProng, HFCandDStarProng::PzSoftpiProng, HFCandDStarProng::D0Px, HFCandDStarProng::D0Py, HFCandDStarProng::D0Pz>,
+                  HFCandDStarProng::CandDStarPVec<HFCandDStarProng::CandDStarPx, HFCandDStarProng::CandDStarPy, HFCandDStarProng::CandDStarPz>,
+                  HFCandDStarProng::D0PVec<HFCandDStarProng::D0Px, HFCandDStarProng::D0Py, HFCandDStarProng::D0Pz>,
+                  HFCandDStarProng::SoftPiPvec<HFCandDStarProng::PxSoftpiProng, HFCandDStarProng::PySoftpiProng, HFCandDStarProng::PzSoftpiProng>);
+
 #undef HFCAND_COLUMNS
 
 } // namespace o2::aod
