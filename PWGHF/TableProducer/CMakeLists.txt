@@ -58,8 +58,15 @@ o2physics_add_dpl_workflow(candidate-creator-dstar
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
                     COMPONENT_NAME Analysis)
 
+# My task is running without DCA Fitter! Is everything fine
+
 o2physics_add_dpl_workflow(candidate-creator-dstar-3
                     SOURCES candidateCreatorDstar3.cxx
+                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
+                    COMPONENT_NAME Analysis)
+
+o2physics_add_dpl_workflow(candidate-creator-dstar-4
+                    SOURCES candidateCreatorDstar4.cxx
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
                     COMPONENT_NAME Analysis)
 
@@ -102,6 +109,11 @@ o2physics_add_dpl_workflow(candidate-selector-bs-to-ds-pi
 
 o2physics_add_dpl_workflow(candidate-selector-d0
                     SOURCES candidateSelectorD0.cxx
+                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2Physics::MLCore
+                    COMPONENT_NAME Analysis)
+
+o2physics_add_dpl_workflow(candidate-selector-dstar
+                    SOURCES candidateSelectorDstar.cxx
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2Physics::MLCore
                     COMPONENT_NAME Analysis)
 

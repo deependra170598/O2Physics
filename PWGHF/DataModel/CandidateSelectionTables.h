@@ -54,6 +54,16 @@ DECLARE_SOA_TABLE(HfSelD0, "AOD", "HFSELD0", //!
 DECLARE_SOA_TABLE(HfMlD0, "AOD", "HFMLD0", //!
                   hf_sel_candidate_d0::MlProbD0);
 
+namespace hf_sel_candidate_dstar
+{
+  DECLARE_SOA_COLUMN(IsSelDstarPlus,isSelDstarPlus,int);
+  DECLARE_SOA_COLUMN(IsSelDstarMinus,isSelDstarMinus,int);
+} // namespace hf_sel_candidate_dstar
+
+DECLARE_SOA_TABLE(HfSelDstar,"AOD","HFSELDSTAR",
+                  hf_sel_candidate_dstar::IsSelDstarPlus,
+                  hf_sel_candidate_dstar::IsSelDstarMinus);
+
 namespace hf_sel_candidate_d0_parametrized_pid
 {
 DECLARE_SOA_COLUMN(IsSelD0NoPid, isSelD0NoPid, int);                 //!

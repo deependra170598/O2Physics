@@ -1,5 +1,7 @@
 // In this version of task I am trying to extend the d0 table with expression columns.
 // MC matching is not done yet.
+// When I was using O2DatabasePDG: program was crashing.
+// Retest after solving debug problem in hf-track-index-skim-creator
 
 // Copyright 2019-2020 CERN and copyright holders of ALICE O2.
 // See https://alice-o2.web.cern.ch/copyright for details of the copyright holders.
@@ -128,13 +130,14 @@ struct HfCandidateCreatorDstar {
 
   }
 
-  void process(aod::Collisions const&,
-               aod::HfDstarsWOStatus_nd_PvRefitInfo const& rowsTrackIndexDstar,
-               aod::Hf2ProngsWOStatus const&,
-               aod::TracksWCov const& tracks,
-               aod::BCsWithTimestamps const& bcWithTimeStamps)
-  {
-    LOG(info) << "process function called";
+  template <bool dopvRefit = false, typename CandsDstar>
+  void runCreatorDstar(aod::Collisions const & collisions,
+                      CandsDstar const & rowsTrackIndexDstar, 
+                      aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
+                      aod::TracksWCov const& tracks,
+                      aod::BCsWithTimestamps const& bcWithTimeStamps){
+
+    LOG(info) << "runCreatorDstar function called";
     // D0-prong vertex fitter
     o2::vertexing::DCAFitterN<2> df;
     df.setPropagateToPCA(propagateToPCA);
@@ -146,12 +149,19 @@ struct HfCandidateCreatorDstar {
     df.setWeightedFinalPCA(useWeightedFinalPCA);
 
     LOG(info) << "candidate loop starts";
-    // loop over suspected DStar Candidates
+    // loop over suspected DStar Candidate
     for (const auto& rowTrackIndexDstar : rowsTrackIndexDstar) {
-      auto trackPi = rowTrackIndexDstar.prong0_as<aod::TracksWCov>();
-      auto prongD0 = rowTrackIndexDstar.prongD0_as<aod::Hf2ProngsWOStatus>();
-      auto trackD0Prong0 = prongD0.prong0_as<aod::TracksWCov>();
-      auto trackD0Prong1 = prongD0.prong1_as<aod::TracksWCov>();
+
+      auto trackPi = rowTrackIndexDstar.template prong0_as<aod::TracksWCov>(); // Template
+      auto prongD0  = rowTrackIndexDstar.template prongD0_as<aod::Hf2ProngsWOStatus>(); // Template
+      auto trackD0Prong0 = prongD0.template prong0_as<aod::TracksWCov>(); // Template
+      auto trackD0Prong1 = prongD0.template prong1_as<aod::TracksWCov>(); // Template
+      
+      // auto trackPi = rowTrackIndexDstar.prong0_as<aod::TracksWCov>();
+      // auto prongD0 = rowTrackIndexDstar.prongD0_as<aod::Hf2ProngsWOStatus>();
+      // auto trackD0Prong0 = prongD0.prong0_as<aod::TracksWCov>();
+      // auto trackD0Prong1 = prongD0.prong1_as<aod::TracksWCov>();
+
       auto collision = rowTrackIndexDstar.collision();
 
       // Extracts primary vertex position and covariance matrix from a collision
@@ -172,7 +182,7 @@ struct HfCandidateCreatorDstar {
       /// Set the magnetic field from ccdb.
       /// The static instance of the propagator was already modified in the HFTrackIndexSkimCreator,  .....................Doubt: Which propagator? Is it propagator to PCA? (Line 762 in traclindexSkimCreator)
       /// but this is not true when running on Run2 data/MC already converted into AO2Ds.
-      auto bc = collision.bc_as<aod::BCsWithTimestamps>();
+      auto bc = collision.template bc_as<aod::BCsWithTimestamps>();
       if (runNumber != bc.runNumber()) {                                                   // ...............Doubt: In this way, we will always have same Number "0"!
         LOG(info) << ">>>>>>>>>>>> Current run number: " << runNumber;                     // Doubt: Still we are using previous value of runNumber=0, Should we update current runNumber?
         initCCDB(bc, runNumber, ccdb, isRun2 ? ccdbPathGrp : ccdbPathGrpMag, lut, isRun2); // Sets up the grp object for magnetic field (w/o matCorr for propagation)
@@ -205,7 +215,7 @@ struct HfCandidateCreatorDstar {
       trackD0Prong1_ParVar1.getPxPyPzGlo(pVecD0Prong1);
 
       // This modifies track momenta! ..............Doubt: which point is this momentum at?
-      if (DoRefit) {
+      if (dopvRefit) {
         /// use PV refit
         /// Using it in the *HfCand3ProngBase/HfCand2ProngBase* all dynamic columns shall take it into account
         // coordinates
@@ -329,6 +339,27 @@ struct HfCandidateCreatorDstar {
     }
     LOG(info) << "Candidate for loop ends";
   }
+
+  void processPvrefit(aod::Collisions const& collisions,
+                      aod::HfDstarsWOStatus_nd_PvRefitInfo const& rowsTrackIndexDstar,
+                      aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
+                      aod::TracksWCov const& tracks,
+                      aod::BCsWithTimestamps const& bcWithTimeStamps){
+
+                      runCreatorDstar<true>(collisions,rowsTrackIndexDstar,rowsTrackIndexD0,tracks,bcWithTimeStamps);
+  }
+  PROCESS_SWITCH(HfCandidateCreatorDstar,processPvrefit," process function with PV refit",true);
+
+  void processNoRefit(aod::Collisions const& collisions,
+                      aod::HfDstars const& rowsTrackIndexDstar,
+                      aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
+                      aod::TracksWCov const& tracks, 
+                      aod::BCsWithTimestamps const& bcWithTimeStamps){
+
+                        runCreatorDstar<false>(collisions,rowsTrackIndexDstar,rowsTrackIndexD0,tracks,bcWithTimeStamps);
+  }
+  PROCESS_SWITCH(HfCandidateCreatorDstar,processNoRefit," process function with no PV refit", false);
+
 };
 
 struct HfCandidateCreatorDstarExpression {
