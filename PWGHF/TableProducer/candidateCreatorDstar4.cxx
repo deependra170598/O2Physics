@@ -80,9 +80,8 @@ struct HfCandidateCreatorDstar {
   // double massKPi{0.};
   // double massD0 = RecoDecay::getMassPDG(pdg::Code::kD0);
 
-  double massPi,massK,massD0;
-  double massPiK{0.},massKPi{0.};
-  
+  double massPi, massK, massD0;
+  double massPiK{0.}, massKPi{0.};
 
   // Refit Container
   OutputObj<TH1F> hCovPVXX{TH1F("hCovPVXX", "2-prong candidates;XX element of cov. matrix of prim. vtx. position (cm^{2});entries", 100, 0., 1.e-4)};
@@ -127,15 +126,15 @@ struct HfCandidateCreatorDstar {
     massPi = o2ServicePDG->Mass(211);
     massK = o2ServicePDG->Mass(311);
     massD0 = o2ServicePDG->Mass(421);
-
   }
 
   template <bool dopvRefit = false, typename CandsDstar>
-  void runCreatorDstar(aod::Collisions const & collisions,
-                      CandsDstar const & rowsTrackIndexDstar, 
-                      aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
-                      aod::TracksWCov const& tracks,
-                      aod::BCsWithTimestamps const& bcWithTimeStamps){
+  void runCreatorDstar(aod::Collisions const& collisions,
+                       CandsDstar const& rowsTrackIndexDstar,
+                       aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
+                       aod::TracksWCov const& tracks,
+                       aod::BCsWithTimestamps const& bcWithTimeStamps)
+  {
 
     LOG(info) << "runCreatorDstar function called";
     // D0-prong vertex fitter
@@ -152,11 +151,11 @@ struct HfCandidateCreatorDstar {
     // loop over suspected DStar Candidate
     for (const auto& rowTrackIndexDstar : rowsTrackIndexDstar) {
 
-      auto trackPi = rowTrackIndexDstar.template prong0_as<aod::TracksWCov>(); // Template
-      auto prongD0  = rowTrackIndexDstar.template prongD0_as<aod::Hf2ProngsWOStatus>(); // Template
-      auto trackD0Prong0 = prongD0.template prong0_as<aod::TracksWCov>(); // Template
-      auto trackD0Prong1 = prongD0.template prong1_as<aod::TracksWCov>(); // Template
-      
+      auto trackPi = rowTrackIndexDstar.template prong0_as<aod::TracksWCov>();         // Template
+      auto prongD0 = rowTrackIndexDstar.template prongD0_as<aod::Hf2ProngsWOStatus>(); // Template
+      auto trackD0Prong0 = prongD0.template prong0_as<aod::TracksWCov>();              // Template
+      auto trackD0Prong1 = prongD0.template prong1_as<aod::TracksWCov>();              // Template
+
       // auto trackPi = rowTrackIndexDstar.prong0_as<aod::TracksWCov>();
       // auto prongD0 = rowTrackIndexDstar.prongD0_as<aod::Hf2ProngsWOStatus>();
       // auto trackD0Prong0 = prongD0.prong0_as<aod::TracksWCov>();
@@ -344,22 +343,23 @@ struct HfCandidateCreatorDstar {
                       aod::HfDstarsWOStatus_nd_PvRefitInfo const& rowsTrackIndexDstar,
                       aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
                       aod::TracksWCov const& tracks,
-                      aod::BCsWithTimestamps const& bcWithTimeStamps){
+                      aod::BCsWithTimestamps const& bcWithTimeStamps)
+  {
 
-                      runCreatorDstar<true>(collisions,rowsTrackIndexDstar,rowsTrackIndexD0,tracks,bcWithTimeStamps);
+    runCreatorDstar<true>(collisions, rowsTrackIndexDstar, rowsTrackIndexD0, tracks, bcWithTimeStamps);
   }
-  PROCESS_SWITCH(HfCandidateCreatorDstar,processPvrefit," process function with PV refit",true);
+  PROCESS_SWITCH(HfCandidateCreatorDstar, processPvrefit, " process function with PV refit", true);
 
   void processNoRefit(aod::Collisions const& collisions,
                       aod::HfDstars const& rowsTrackIndexDstar,
                       aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
-                      aod::TracksWCov const& tracks, 
-                      aod::BCsWithTimestamps const& bcWithTimeStamps){
+                      aod::TracksWCov const& tracks,
+                      aod::BCsWithTimestamps const& bcWithTimeStamps)
+  {
 
-                        runCreatorDstar<false>(collisions,rowsTrackIndexDstar,rowsTrackIndexD0,tracks,bcWithTimeStamps);
+    runCreatorDstar<false>(collisions, rowsTrackIndexDstar, rowsTrackIndexD0, tracks, bcWithTimeStamps);
   }
-  PROCESS_SWITCH(HfCandidateCreatorDstar,processNoRefit," process function with no PV refit", false);
-
+  PROCESS_SWITCH(HfCandidateCreatorDstar, processNoRefit, " process function with no PV refit", false);
 };
 
 struct HfCandidateCreatorDstarExpression {

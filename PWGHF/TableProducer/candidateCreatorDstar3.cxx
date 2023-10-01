@@ -78,9 +78,8 @@ struct HfCandidateCreatorDstar {
   // double massKPi{0.};
   // double massD0 = RecoDecay::getMassPDG(pdg::Code::kD0);
 
-  double massPi,massK,massD0;
-  double massPiK{0.},massKPi{0.};
-  
+  double massPi, massK, massD0;
+  double massPiK{0.}, massKPi{0.};
 
   // Refit Container
   OutputObj<TH1F> hCovPVXX{TH1F("hCovPVXX", "2-prong candidates;XX element of cov. matrix of prim. vtx. position (cm^{2});entries", 100, 0., 1.e-4)};
@@ -125,7 +124,6 @@ struct HfCandidateCreatorDstar {
     massPi = o2ServicePDG->Mass(211);
     massK = o2ServicePDG->Mass(311);
     massD0 = o2ServicePDG->Mass(421);
-
   }
 
   void process(aod::Collisions const&,

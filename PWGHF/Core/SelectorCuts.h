@@ -354,13 +354,13 @@ static const std::vector<std::string> labelsPt = {
 static const std::vector<std::string> labelsCutVar = {"m", "DCA", "cos theta*", "pT K", "pT Pi", "d0K", "d0pi", "d0d0", "cos pointing angle", "cos pointing angle xy", "normalized decay length XY", "decay length", "decay length XY", "minimum decay length"};
 } // namespace hf_cuts_d0_to_pi_k
 
-
-namespace hf_cuts_dstar_to_pi_d0{
-  static constexpr int nBinsPt = 10;
-  static constexpr int nCutVars = 5;
-  // default values for the pT bin edges (can be used to configure histogram axis)
-  // offset by 1 from the bin numbers in cuts array
-  constexpr double binsPt[nBinsPt + 1] = {
+namespace hf_cuts_dstar_to_pi_d0
+{
+static constexpr int nBinsPt = 10;
+static constexpr int nCutVars = 5;
+// default values for the pT bin edges (can be used to configure histogram axis)
+// offset by 1 from the bin numbers in cuts array
+constexpr double binsPt[nBinsPt + 1] = {
   1.0,
   1.5,
   2.0,
@@ -372,9 +372,9 @@ namespace hf_cuts_dstar_to_pi_d0{
   5.0,
   5.5,
   6.0};
-  auto vecBinsPt = std::vector<double>{binsPt, binsPt + nBinsPt + 1};
+auto vecBinsPt = std::vector<double>{binsPt, binsPt + nBinsPt + 1};
 
-  // row labels
+// row labels
 static const std::vector<std::string> labelsPt = {
   "pT bin 0",
   "pT bin 1",
@@ -388,22 +388,21 @@ static const std::vector<std::string> labelsPt = {
   "pT bin 9",
   "pT bin 10"};
 
-  // column label
-  static const std::vector<std::string> labelsCutVar = {"minpTSoftPi","maxpTSoftPi","minpTD0_Prong0","maxpTD0_Prong1","minDeltaMDstar_D0"};
+// column label
+static const std::vector<std::string> labelsCutVar = {"minpTSoftPi", "maxpTSoftPi", "minpTD0_Prong0", "maxpTD0_Prong1", "minDeltaMDstar_D0"};
 
-  // default values for the cuts
-  constexpr double cuts[nBinsPt][nCutVars] = {{0.05,0.3,0.4,0.4},
-                                              {0.05,0.3,0.4,0.4},
-                                              {0.05,0.4,0.9,0.9},
-                                              {0.05,0.4,0.9,0.9},
-                                              {0.05,0.6,0.9,0.9},
-                                              {0.05,0.6,1,1},
-                                              {0.05,0.6,1,1},
-                                              {0.05,100,1,1},
-                                              {0.05,100,1,1},
-                                              {0.05,100,1,1}};
+// default values for the cuts
+constexpr double cuts[nBinsPt][nCutVars] = {{0.05, 0.3, 0.4, 0.4},
+                                            {0.05, 0.3, 0.4, 0.4},
+                                            {0.05, 0.4, 0.9, 0.9},
+                                            {0.05, 0.4, 0.9, 0.9},
+                                            {0.05, 0.6, 0.9, 0.9},
+                                            {0.05, 0.6, 1, 1},
+                                            {0.05, 0.6, 1, 1},
+                                            {0.05, 100, 1, 1},
+                                            {0.05, 100, 1, 1},
+                                            {0.05, 100, 1, 1}};
 } // namespace hf_cuts_dstar_to_pi_d0
-
 
 namespace hf_cuts_lc_to_p_k_pi
 {

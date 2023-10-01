@@ -56,11 +56,11 @@ DECLARE_SOA_TABLE(HfMlD0, "AOD", "HFMLD0", //!
 
 namespace hf_sel_candidate_dstar
 {
-  DECLARE_SOA_COLUMN(IsSelDstarPlus,isSelDstarPlus,int);
-  DECLARE_SOA_COLUMN(IsSelDstarMinus,isSelDstarMinus,int);
+DECLARE_SOA_COLUMN(IsSelDstarPlus, isSelDstarPlus, int);
+DECLARE_SOA_COLUMN(IsSelDstarMinus, isSelDstarMinus, int);
 } // namespace hf_sel_candidate_dstar
 
-DECLARE_SOA_TABLE(HfSelDstar,"AOD","HFSELDSTAR",
+DECLARE_SOA_TABLE(HfSelDstar, "AOD", "HFSELDSTAR",
                   hf_sel_candidate_dstar::IsSelDstarPlus,
                   hf_sel_candidate_dstar::IsSelDstarMinus);
 
