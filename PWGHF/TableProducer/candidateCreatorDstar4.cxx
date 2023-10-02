@@ -40,7 +40,7 @@ namespace o2::aod
 //   using Hf2ProngsWStatus = soa:: Join<aod::Hf2Prongs, aod::HfCutStatus2Prong>;
 
 using HfDstarsWOStatus = aod::HfDstars;
-using HfDstarsWOStatus_nd_PvRefitInfo = soa::Join<aod::HfDstars, aod::HfPvRefitDstar>;
+using HfDstarsWOStatusAndPvRefitInfo = soa::Join<aod::HfDstars, aod::HfPvRefitDstar>;
 using Hf2ProngsWOStatus = aod::Hf2Prongs;
 } // namespace o2::aod
 
@@ -58,7 +58,7 @@ struct HfCandidateCreatorDstar {
   Configurable<std::string> ccdbPathGrp{"ccdbPathGrp", "GLO/GRP/GRP", "Path of the grp file (Run 2)"};
   Configurable<std::string> ccdbPathGrpMag{"ccdbPathGrpMag", "GLO/Config/GRPMagField", "CCDB path of the GRPMagField object (Run 3)"};
   // vertexing
-  Configurable<bool> DoRefit{"DoPvRefit", false, "Do Primary Vertex Refit. Optional"};
+  // Configurable<bool> DoRefit{"DoPvRefit", false, "Do Primary Vertex Refit. Optional"};
   Configurable<bool> propagateToPCA{"propagateToPCA", true, "create tracks version propagated to PCA"};
   Configurable<double> maxR{"maxR", 200., "reject PCA's above this radius"};                                   // ........... what is unit of this?
   Configurable<double> maxDZIni{"maxDZIni", 4., "reject (if>0) PCA candidate if tracks DZ exceeds threshold"}; // ..........What it DZ?
@@ -73,12 +73,6 @@ struct HfCandidateCreatorDstar {
   int runNumber;
   double bz;
   float toMicrometers = 10000.; // from cm to µm
-
-  // double massPi = RecoDecay::getMassPDG(kPiPlus);
-  // double massK = RecoDecay::getMassPDG(kKPlus);
-  // double massPiK{0.};
-  // double massKPi{0.};
-  // double massD0 = RecoDecay::getMassPDG(pdg::Code::kD0);
 
   double massPi, massK, massD0;
   double massPiK{0.}, massKPi{0.};
@@ -156,11 +150,6 @@ struct HfCandidateCreatorDstar {
       auto trackD0Prong0 = prongD0.template prong0_as<aod::TracksWCov>();              // Template
       auto trackD0Prong1 = prongD0.template prong1_as<aod::TracksWCov>();              // Template
 
-      // auto trackPi = rowTrackIndexDstar.prong0_as<aod::TracksWCov>();
-      // auto prongD0 = rowTrackIndexDstar.prongD0_as<aod::Hf2ProngsWOStatus>();
-      // auto trackD0Prong0 = prongD0.prong0_as<aod::TracksWCov>();
-      // auto trackD0Prong1 = prongD0.prong1_as<aod::TracksWCov>();
-
       auto collision = rowTrackIndexDstar.collision();
 
       // Extracts primary vertex position and covariance matrix from a collision
@@ -182,8 +171,8 @@ struct HfCandidateCreatorDstar {
       /// The static instance of the propagator was already modified in the HFTrackIndexSkimCreator,  .....................Doubt: Which propagator? Is it propagator to PCA? (Line 762 in traclindexSkimCreator)
       /// but this is not true when running on Run2 data/MC already converted into AO2Ds.
       auto bc = collision.template bc_as<aod::BCsWithTimestamps>();
-      if (runNumber != bc.runNumber()) {                                                   // ...............Doubt: In this way, we will always have same Number "0"!
-        LOG(info) << ">>>>>>>>>>>> Current run number: " << runNumber;                     // Doubt: Still we are using previous value of runNumber=0, Should we update current runNumber?
+      if (runNumber != bc.runNumber()) {                                                   
+        LOG(info) << ">>>>>>>>>>>> Current run number: " << runNumber;                     
         initCCDB(bc, runNumber, ccdb, isRun2 ? ccdbPathGrp : ccdbPathGrpMag, lut, isRun2); // Sets up the grp object for magnetic field (w/o matCorr for propagation)
         bz = o2::base::Propagator::Instance()->getNominalBz();
         LOG(info) << ">>>>>>>>>>>> Magnetic field: " << bz;
@@ -214,7 +203,7 @@ struct HfCandidateCreatorDstar {
       trackD0Prong1_ParVar1.getPxPyPzGlo(pVecD0Prong1);
 
       // This modifies track momenta! ..............Doubt: which point is this momentum at?
-      if (dopvRefit) {
+      if constexpr (dopvRefit) {
         /// use PV refit
         /// Using it in the *HfCand3ProngBase/HfCand2ProngBase* all dynamic columns shall take it into account
         // coordinates
@@ -282,9 +271,11 @@ struct HfCandidateCreatorDstar {
       // D0 pt magnitude
       auto ptD0 = RecoDecay::pt(ptVecD0);
 
-      //   auto InvMassDStar = RecoDecay::m(std::array{pVecPi,pVecD0},std::array{massPi,massD0});
-      auto InvMassDStarPiK = RecoDecay::m(std::array{pVecPi, pVecD0}, std::array{massPi, massPiK});
-      auto InvMassDStarKPi = RecoDecay::m(std::array{pVecPi, pVecD0}, std::array{massPi, massKPi});
+      //  auto InvMassDStar = RecoDecay::m(std::array{pVecPi,pVecD0},std::array{massPi,massD0});
+      // auto InvMassDStarPiK = RecoDecay::m(std::array{pVecPi, pVecD0}, std::array{massPi, massPiK});
+      // auto InvMassDStarKPi = RecoDecay::m(std::array{pVecPi, pVecD0}, std::array{massPi, massKPi});
+      // ..............Doubt: Does reflection symmetry not matter in Dstar calculation?
+      auto InvMassDStar = RecoDecay::m(std::array{pVecPi,pVecD0Prong0,pVecD0Prong1},std::array{massPi,massPi,massK});
 
       // Soft pi momentum vector
       std::array<float, 3> SoftPipVec;
@@ -325,8 +316,8 @@ struct HfCandidateCreatorDstar {
                   prongD0.hfflag());
 
       if (fillHistograms) {
-        hDeltaMassDStar->Fill(InvMassDStarPiK - massPiK);
-        hDeltaMassDStar->Fill(InvMassDStarKPi - massKPi);
+        hDeltaMassDStar->Fill(InvMassDStar - massPiK);
+        // hDeltaMassDStar->Fill(InvMassDStarKPi - massKPi);
         hMassD0->Fill(massPiK);
         hMassD0->Fill(massKPi);
         hPtD0->Fill(ptD0);
@@ -340,7 +331,7 @@ struct HfCandidateCreatorDstar {
   }
 
   void processPvrefit(aod::Collisions const& collisions,
-                      aod::HfDstarsWOStatus_nd_PvRefitInfo const& rowsTrackIndexDstar,
+                      aod::HfDstarsWOStatusAndPvRefitInfo const& rowsTrackIndexDstar,
                       aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
                       aod::TracksWCov const& tracks,
                       aod::BCsWithTimestamps const& bcWithTimeStamps)
