@@ -2129,7 +2129,7 @@ DECLARE_SOA_TABLE(HfCandScMcGen, "AOD", "HFCANDSCMCGEN", //!
 namespace HFCandDStarProng
 {
 DECLARE_SOA_INDEX_COLUMN_FULL(ProngPi, prongPi, int, Tracks, "");         // Softpi Index
-DECLARE_SOA_INDEX_COLUMN_FULL(ProngD0, prondD0, int, HfCand2Prong, "_0"); // D0 Index
+DECLARE_SOA_INDEX_COLUMN_FULL(ProngD0Cand, prondD0Cand, int, HfCand2Prong, "_0"); // D0 Index
 DECLARE_SOA_COLUMN(CandDStarP, candDStarp, float);
 DECLARE_SOA_COLUMN(CandDStarPx, candDStarpx, float);
 DECLARE_SOA_COLUMN(CandDStarPy, candDStarpy, float);
@@ -2162,9 +2162,8 @@ DECLARE_SOA_TABLE(HfCandDStarBase, "AOD", "HFDSTARCAND",
                   hf_cand::CollisionId,
                   HFCandDStarProng::ProngPiId,
 
-                  // Doubt: What if we switch comment on the following two columns? What effect?
-                   hf_track_index::ProngD0Id,  // Index column to Hf2Prongs table filled by indexSkimcreator
-                  // HFCandDStarProng::ProngD0Id, // Index column to HfCand2Prong table filled by candidateCreator2Prong
+                  hf_track_index::ProngD0Id,  // Index column to Hf2Prongs table filled by indexSkimcreator
+                  HFCandDStarProng::ProngD0CandId, // Index column to HfCand2Prong table filled by candidateCreator2Prong.cxx/candidateCreatorDstar.cxx
 
                   // hf_track_index::FlagDstarToD0Pi,
                   HFCandDStarProng::CandDStarPx,

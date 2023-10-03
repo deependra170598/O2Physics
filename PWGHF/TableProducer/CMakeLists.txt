@@ -60,11 +60,6 @@ o2physics_add_dpl_workflow(candidate-creator-dstar
 
 # My task is running without DCA Fitter! Is everything fine
 
-o2physics_add_dpl_workflow(candidate-creator-dstar-3
-                    SOURCES candidateCreatorDstar3.cxx
-                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
-                    COMPONENT_NAME Analysis)
-
 o2physics_add_dpl_workflow(candidate-creator-dstar-4
                     SOURCES candidateCreatorDstar4.cxx
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore

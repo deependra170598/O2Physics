@@ -120,8 +120,10 @@ struct HfCandidateCreatorDstar {
     massPi = o2ServicePDG->Mass(211);
     massK = o2ServicePDG->Mass(311);
     massD0 = o2ServicePDG->Mass(421);
+    GlobalIndexForHf2ProngCand = -1;
   }
 
+  int GlobalIndexForHf2ProngCand;
   template <bool dopvRefit = false, typename CandsDstar>
   void runCreatorDstar(aod::Collisions const& collisions,
                        CandsDstar const& rowsTrackIndexDstar,
@@ -143,6 +145,7 @@ struct HfCandidateCreatorDstar {
     LOG(info) << "candidate loop starts";
     // loop over suspected DStar Candidate
     for (const auto& rowTrackIndexDstar : rowsTrackIndexDstar) {
+      ++GlobalIndexForHf2ProngCand;
 
       auto trackPi = rowTrackIndexDstar.template prong0_as<aod::TracksWCov>();         // Template
       auto prongD0 = rowTrackIndexDstar.template prongD0_as<aod::Hf2ProngsWOStatus>(); // Template
@@ -293,7 +296,7 @@ struct HfCandidateCreatorDstar {
 
       // LOGF(info,"Table filling start");
       // Fill candidate Table for DStar
-      DStarCandTable(collision.globalIndex(), rowTrackIndexDstar.prong0Id(), rowTrackIndexDstar.prongD0Id(),
+      DStarCandTable(collision.globalIndex(), rowTrackIndexDstar.prong0Id(), rowTrackIndexDstar.prongD0Id(),GlobalIndexForHf2ProngCand,
                      //   rowTrackIndexDstar.flagDstarToD0Pi(),
                      pVecDStar[0], pVecDStar[1], pVecDStar[2],
                      pDStar, ptDStar,
