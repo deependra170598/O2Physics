@@ -103,7 +103,7 @@ struct HfCandidateCreatorDstar {
   /// @param
   void init(InitContext const&)
   {
-    // if(doprocessPvRefit && processNoPvRefit){ //............Warning! remove this if any of this function is removed
+    // if(processPvrefit && processNoRefit){ //............Warning! remove this if any of this function is removed
     //   LOGP(fatal, "Only one process function between processPvRefit and processNoPvRefit can be enabled at a time.");
     // }
     LOG(info) << "Init Function Invoked";
@@ -129,7 +129,6 @@ struct HfCandidateCreatorDstar {
                        aod::TracksWCov const& tracks,
                        aod::BCsWithTimestamps const& bcWithTimeStamps)
   {
-
     LOG(info) << "runCreatorDstar function called";
     // D0-prong vertex fitter
     o2::vertexing::DCAFitterN<2> df;
@@ -331,8 +330,8 @@ struct HfCandidateCreatorDstar {
   }
 
   void processPvrefit(aod::Collisions const& collisions,
-                      aod::HfDstarsWOStatusAndPvRefitInfo const& rowsTrackIndexDstar,
                       aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
+                      aod::HfDstarsWOStatusAndPvRefitInfo const& rowsTrackIndexDstar,
                       aod::TracksWCov const& tracks,
                       aod::BCsWithTimestamps const& bcWithTimeStamps)
   {
@@ -342,8 +341,8 @@ struct HfCandidateCreatorDstar {
   PROCESS_SWITCH(HfCandidateCreatorDstar, processPvrefit, " process function with PV refit", true);
 
   void processNoRefit(aod::Collisions const& collisions,
-                      aod::HfDstars const& rowsTrackIndexDstar,
                       aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
+                      aod::HfDstars const& rowsTrackIndexDstar,
                       aod::TracksWCov const& tracks,
                       aod::BCsWithTimestamps const& bcWithTimeStamps)
   {

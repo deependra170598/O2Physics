@@ -2163,8 +2163,8 @@ DECLARE_SOA_TABLE(HfCandDStarBase, "AOD", "HFDSTARCAND",
                   HFCandDStarProng::ProngPiId,
 
                   // Doubt: What if we switch comment on the following two columns? What effect?
-                  //  hf_track_index::ProngD0Id,  // Index column to Hf2Prongs table filled by indexSkimcreator
-                  HFCandDStarProng::ProngD0Id, // Index column to HfCand2Prong table filled by candidateCreator2Prong
+                   hf_track_index::ProngD0Id,  // Index column to Hf2Prongs table filled by indexSkimcreator
+                  // HFCandDStarProng::ProngD0Id, // Index column to HfCand2Prong table filled by candidateCreator2Prong
 
                   // hf_track_index::FlagDstarToD0Pi,
                   HFCandDStarProng::CandDStarPx,
