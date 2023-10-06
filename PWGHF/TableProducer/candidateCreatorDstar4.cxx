@@ -282,6 +282,10 @@ struct HfCandidateCreatorDstar {
       // Soft pi momentum vector
       std::array<float, 3> SoftPipVec;
       trackPi_ParVar.getPxPyPzGlo(SoftPipVec);
+      // Softpi pTVec
+      std::array<float,2> SoftPipTVec{SoftPipVec[0],SoftPipVec[1]};
+      // Softpi pT magnitude
+      auto SoftPipT = RecoDecay::pt(SoftPipTVec);
 
       // Dstar momentum vector
       auto pVecDStar = RecoDecay::pVec(pVecD0, SoftPipVec);
@@ -301,7 +305,7 @@ struct HfCandidateCreatorDstar {
                      pVecDStar[0], pVecDStar[1], pVecDStar[2],
                      pDStar, ptDStar,
                      primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
-                     SoftPipVec[0], SoftPipVec[1], SoftPipVec[2],
+                     SoftPipVec[0], SoftPipVec[1], SoftPipVec[2],SoftPipT,
                      impactParameterPi.getY(), std::sqrt(impactParameterPi.getSigmaY2()),
                      pVecD0[0], pVecD0[1], pVecD0[2]);
       // Fill candidate Table for D0

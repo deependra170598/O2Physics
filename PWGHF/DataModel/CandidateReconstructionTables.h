@@ -2304,6 +2304,7 @@ DECLARE_SOA_DYNAMIC_COLUMN(NormalisedImpParamSoftPiProng, normalisedImpParamSoft
 DECLARE_SOA_COLUMN(PxSoftpiProng, pxSoftpiProng, float);
 DECLARE_SOA_COLUMN(PySoftpiProng, pySoftpiProng, float);
 DECLARE_SOA_COLUMN(PzSoftpiProng, pzSoftpiProng, float);
+DECLARE_SOA_COLUMN(PtSoftpiProng,ptSoftpiProng,float);
 DECLARE_SOA_DYNAMIC_COLUMN(SoftPiPvec, softPiPvec, [](float px, float py, float pz) -> std::array<float, 3> { return std::array{px, py, pz}; });
 
 enum DecayType{
@@ -2331,6 +2332,7 @@ DECLARE_SOA_TABLE(HfCandDStarBase, "AOD", "HFDSTARCAND",
 
                   // Softpi
                   HFCandDStarProng::PxSoftpiProng, HFCandDStarProng::PySoftpiProng, HFCandDStarProng::PzSoftpiProng,
+                  HFCandDStarProng::PtSoftpiProng,
                   HFCandDStarProng::ImpParamSoftPiProng, HFCandDStarProng::ErrorImpParamSoftPiProng,
                   // D0 momenta
                   HFCandDStarProng::D0Px, HFCandDStarProng::D0Py, HFCandDStarProng::D0Pz,

@@ -36,6 +36,10 @@ struct HfCandidateSelctorDstar {
   }d0configurable;
 
   struct DstarConfigurable: ConfigurableGroup{
+    Configurable <double> ptDstarCandMin{"ptDstarCandMin",0.,"Lower bound of Dstar candidate pT"};
+    Configurable <double> ptDstarCandmax{"ptDstarCandmax",50.,"upper bound of Dstar candidate pT"};
+
+    // topological cuts
     Configurable<std::vector<double>> binsPtForDstar{"binsPtForDstar",std::vector<double>{hf_cuts_dstar_to_pi_d0::vecBinsPt},"pT bin limits for Dstar"};
     Configurable<LabeledArray<double>> cutsForDstar{"cutsForDstar",{hf_cuts_dstar_to_pi_d0::cuts[0],
                                                                     hf_cuts_dstar_to_pi_d0::nBinsPt,
@@ -77,9 +81,15 @@ struct HfCandidateSelctorDstar {
 
   }
 
-  
-  bool selectionTopolD0(aod::HfCand2Prong::iterator const & candidate){
-    auto candpT = candidate.pt();
+
+  /// Conjugate-independent topological cuts on D0
+  /// @brief Topological selection on D0 candidate from Dstar
+  /// @tparam T table iterator type of the candidate
+  /// @param candidate candidate instance(object)
+  /// @return true or false depending on selected or not
+  template<typename T>
+  bool selectionTopolD0(const T & candidate){
+    auto candpT = candidate.d0pt();
     auto pTBin = findBin(d0configurable.binsPtForD0,candpT);
     if(pTBin == -1){
       return false;
@@ -90,11 +100,11 @@ struct HfCandidateSelctorDstar {
       return false;
     }
     // product of daughter impact parameters
-    if(candidate.impactParameterProduct() > d0configurable.cutsForD0->get(pTBin,"d0d0")){
+    if(candidate.d0impactParameterProduct() > d0configurable.cutsForD0->get(pTBin,"d0d0")){
       return false;
     }
     // // cosine of pointing angle
-    if(candidate.cpaXY() < d0configurable.cutsForD0->get(pTBin,"cos pointing angle xy")){
+    if(candidate.d0cpaXY() < d0configurable.cutsForD0->get(pTBin,"cos pointing angle xy")){
       return false;
     }
     // normalised decay length in XY plane
@@ -112,7 +122,7 @@ struct HfCandidateSelctorDstar {
     if(std::abs(candidate.impactParameterNormalised0())< 0.5 || std::abs(candidate.impactParameterNormalised1())<0.5){
       return false;
     }
-    double decayLengthCut = std::min((candidate.p()*0.0066)+0.01,d0configurable.cutsForD0->get(pTBin,"minimum decay length"));
+    double decayLengthCut = std::min((candidate.d0p()*0.0066)+0.01,d0configurable.cutsForD0->get(pTBin,"minimum decay length"));
     if(candidate.decayLength()*candidate.decayLength() < decayLengthCut * decayLengthCut){
       return false;
     }
@@ -131,14 +141,62 @@ struct HfCandidateSelctorDstar {
   }
 
 
+  /// Conjugate-independent topological cuts on Dstar
+  /// @brief selection on Dstar candidate
+  /// @tparam T1 table iterator type of the D0 candidate
+  /// @tparam T2 table iterator type of the Dstar candidate
+  /// @param d0Candidate D0 candidate object
+  /// @param dstarCandidate Dstar candidate object
+  /// @return true or false depending on selected or not
+  template <typename T1, typename T2>
+  bool selectionOnDstar(const T1 & d0Candidate, const T2 & dstarCandidate ){
+    auto dstarpT = dstarCandidate.candDStarpt();
+    auto pTBin = findBin(dstarconfigurable.binsPtForDstar,dstarpT);
+    if(pTBin = -1){
+      return false;
+    }
+    // check that the candidate pT is within the analysis range
+    if(dstarpT < dstarconfigurable.ptDstarCandMin || dstarpT >= dstarconfigurable.ptDstarCandmax){
+      return false;
+    }
+    // selction on DCA of softpi
+    if(std::abs(dstarCandidate.impParamSoftPiProng()) > dstarconfigurable.cutsForDstar->get(pTBin,"d0Softpi")){
+      return false;
+    }
+    if(std::abs(dstarCandidate.normalisedImpParamSoftPiProng()) > dstarconfigurable.cutsForDstar->get(pTBin,"d0SoftPiNormalised")){
+      return false;
+    }
+    // selection on pT of soft Pi
+    if((dstarCandidate.ptSoftpiProng() < dstarconfigurable.cutsForDstar->get(pTBin,"minpTSoftPi"))||(dstarCandidate.ptSoftpiProng() > dstarconfigurable.cutsForDstar->get(pTBin,"maxpTSoftPi"))){
+      return false;
+    }
+    // selection on pT of D0Prong1,2
+    auto d0prong0 = d0Candidate.prong0();
+    if(d0prong0.pt() < dstarconfigurable.cutsForDstar->get(pTBin,"minpTD0_Prong0")){
+      return false;
+    }
+    auto d0prong1 = d0Candidate.prong1();
+    if(d0prong1.pt() < dstarconfigurable.cutsForDstar->get(pTBin,"minpTD0_Prong1")){
+      return false;
+    }
+    // selection on D0Candidate
+    if(!selectionTopolD0(d0Candidate)){
+      return false;
+    }
+    return true;
+  }
   
-  
+
+  bool selectionTopolConjugate(){
+    
+  }
 
 
-  
 
 
-  void process(aod::Hf2Prongs const&, aod::HfCand2Prong const &, aod::HfCandDStarBase const & rowsDStarCands)
+
+
+  void process(aod::Hf2Prong const &, aod::HfD0fromDstar const & rowsD0cand, aod::HfCandDStarBase const & rowsDstarCand)
   {
     LOG(info) << "selector: processQA called";
   }
