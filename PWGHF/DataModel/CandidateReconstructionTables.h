@@ -2292,10 +2292,14 @@ DECLARE_SOA_COLUMN(D0Py, d0py, float);
 DECLARE_SOA_COLUMN(D0Pz, d0pz, float);
 DECLARE_SOA_DYNAMIC_COLUMN(D0PVec, d0PVec, [](float px, float py, float pz) -> std::array<float, 3> { return std::array{px, py, pz}; });
 
-// Inv Masses
+// Inv Mass (accpet mass array of size 2 {Mπ , Md0})
 DECLARE_SOA_DYNAMIC_COLUMN(DStarMass, dstarmass,
                            [](float pxPi, float pyPi, float pzPi, float pxD0, float pyD0, float pzD0, const std::array<double, 2>& m) -> float { return RecoDecay::m(std::array{std::array{pxPi, pyPi, pzPi}, std::array{pxD0, pyD0, pzD0}}, m); });
 
+// Inv Mass (accpet mass array of size 2 {Mπ , Mπ, Mk})
+DECLARE_SOA_DYNAMIC_COLUMN(DstarInvMass,dstarInvMass,
+                            [](float pxSoftPi, float pySoftPi, float pzSoftPi, float pxProng0,float pyProng0,float pzProng0,float pxProng1,float pyProng1,float pzProng1, const std::array<double,3>& m) 
+                            -> float{return RecoDecay::m(std::array{std::array{pxSoftPi,pySoftPi,pzSoftPi},std::array{pxProng0,pyProng0,pzProng0},std::array{pxProng1,pyProng1,pzProng1}}, m);});
 // SoftPiProng
 DECLARE_SOA_COLUMN(ImpParamSoftPiProng, impParamSoftPiProng, float);
 DECLARE_SOA_COLUMN(ErrorImpParamSoftPiProng, errorImpParamSoftPiProng, float);
@@ -2308,8 +2312,14 @@ DECLARE_SOA_COLUMN(PtSoftpiProng,ptSoftpiProng,float);
 DECLARE_SOA_DYNAMIC_COLUMN(SoftPiPvec, softPiPvec, [](float px, float py, float pz) -> std::array<float, 3> { return std::array{px, py, pz}; });
 
 enum DecayType{
-  DstarToPiD0 =0
-};
+  DstarToPiD0 =0,
+  NDstarDecayType};
+
+// MC matching result:
+DECLARE_SOA_COLUMN(FlagMcMatchRec, flagMcMatchRec, int8_t); //! reconstruction level
+DECLARE_SOA_COLUMN(FlagMcMatchGen, flagMcMatchGen, int8_t); //! generator level
+DECLARE_SOA_COLUMN(OriginMcRec, originMcRec, int8_t);       //! particle origin, reconstruction level
+DECLARE_SOA_COLUMN(OriginMcGen, originMcGen, int8_t);       //! particle origin, generator level
 
 } // namespace HFCandDStarProng
 
@@ -2322,11 +2332,10 @@ DECLARE_SOA_TABLE(HfCandDStarBase, "AOD", "HFDSTARCAND",
                   // HFCandDStarProng::ProngD0CandId, // Index column points to HfCand2Prong table filled by candidateCreator2Prong.cxx/candidateCreatorDstar.cxx
 
                   // hf_track_index::FlagDstarToD0Pi,
-                  HFCandDStarProng::CandDStarPx,
-                  HFCandDStarProng::CandDStarPy,
-                  HFCandDStarProng::CandDStarPz,
-                  HFCandDStarProng::CandDStarP,
-                  HFCandDStarProng::CandDStarPt,
+                  // Dstar momentum
+                  HFCandDStarProng::CandDStarPx,HFCandDStarProng::CandDStarPy,HFCandDStarProng::CandDStarPz,
+                  HFCandDStarProng::CandDStarP,HFCandDStarProng::CandDStarPt,
+                  
                   // Primary vertex
                   collision::PosX, collision::PosY, collision::PosZ,
 
@@ -2337,12 +2346,27 @@ DECLARE_SOA_TABLE(HfCandDStarBase, "AOD", "HFDSTARCAND",
                   // D0 momenta
                   HFCandDStarProng::D0Px, HFCandDStarProng::D0Py, HFCandDStarProng::D0Pz,
 
+                  // 2-prong specific columns
+                  hf_cand::PxProng0,hf_cand::PyProng0, hf_cand::PzProng0,
+                  hf_cand::PxProng1, hf_cand::PyProng1, hf_cand::PzProng1,
+
                   // ................Dynamic columns ..................................................
                   HFCandDStarProng::NormalisedImpParamSoftPiProng<HFCandDStarProng::ImpParamSoftPiProng, HFCandDStarProng::ErrorImpParamSoftPiProng>,
                   HFCandDStarProng::DStarMass<HFCandDStarProng::PxSoftpiProng, HFCandDStarProng::PySoftpiProng, HFCandDStarProng::PzSoftpiProng, HFCandDStarProng::D0Px, HFCandDStarProng::D0Py, HFCandDStarProng::D0Pz>,
+                  HFCandDStarProng::DstarInvMass<HFCandDStarProng::PxSoftpiProng, HFCandDStarProng::PySoftpiProng,HFCandDStarProng::PzSoftpiProng,hf_cand::PxProng0,hf_cand::PyProng0, hf_cand::PzProng0,hf_cand::PxProng1, hf_cand::PyProng1, hf_cand::PzProng1>,
                   HFCandDStarProng::CandDStarPVec<HFCandDStarProng::CandDStarPx, HFCandDStarProng::CandDStarPy, HFCandDStarProng::CandDStarPz>,
                   HFCandDStarProng::D0PVec<HFCandDStarProng::D0Px, HFCandDStarProng::D0Py, HFCandDStarProng::D0Pz>,
                   HFCandDStarProng::SoftPiPvec<HFCandDStarProng::PxSoftpiProng, HFCandDStarProng::PySoftpiProng, HFCandDStarProng::PzSoftpiProng>);
+
+// table with results of reconstruction level MC matching
+DECLARE_SOA_TABLE(HfDStarMCRec,"AOD","HFDSTARMCREC",
+                HFCandDStarProng::FlagMcMatchRec,
+                HFCandDStarProng::OriginMcRec);
+
+// table with results of generator level MC matching
+DECLARE_SOA_TABLE(HfDStarMCGen,"AOD","HFDSTARMCGEN",
+                  HFCandDStarProng::FlagMcMatchGen,
+                  HFCandDStarProng::OriginMcGen);
 
 #undef HFCAND_COLUMNS
 

@@ -32,6 +32,7 @@
 
 using namespace o2;
 using namespace o2::framework;
+using namespace o2::aod::HFCandDStarProng;
 
 namespace o2::aod
 {
@@ -93,7 +94,7 @@ struct HfCandidateCreatorDstar {
   OutputObj<TH2F> hDCAZPi{TH2F("hDCAZPi", "DCAz of Soft Pi;#it{p}_{T} (GeV/#it{c};#it{d}_{xy}) (#mum);entries", 100, 0., 20., 200, -500., 500.)};
 
   OutputObj<TH1F> hMassD0{TH1F("hMassD0", "D0 candidates;inv. mass (#pi D^{0}) (GeV/#it{c}^{2});entries", 500, 0., 5.)};
-  OutputObj<TH1F> hDeltaMassDStar{TH1F("hDeltaMassDStar", "D* candidates;inv. mass (#pi D^{0}) (GeV/#it{c}^{2});entries", 500, 0., 5.)};
+  // OutputObj<TH1F> hDeltaMassDStar{TH1F("hDeltaMassDStar", "D* candidates;inv. mass (#pi D^{0}) (GeV/#it{c}^{2});entries", 500, 0., 5.)};
   OutputObj<TH1F> hPtPi{TH1F("hPtPi", "#pi candidates;#it{p}_{T} (GeV/#it{c});entries", 500, 0., 5.)};
   OutputObj<TH1F> hPtD0Prong0{TH1F("hPtD0Prong0", "D^{0} candidates;prong 0 #it{p}_{T} (GeV/#it{c});entries", 500, 0., 5.)};
   OutputObj<TH1F> hPtD0Prong1{TH1F("hPtD0Prong1", "D^{0} candidates;prong 1 #it{p}_{T} (GeV/#it{c});entries", 500, 0., 5.)};
@@ -123,7 +124,14 @@ struct HfCandidateCreatorDstar {
     
   }
 
-  
+  /// @brief function for secondary vertex reconstruction and candidate creator
+  /// @tparam CandsDstar Table type of candidate
+  /// @tparam dopvRefit True/False PV refit option
+  /// @param collisions collision object
+  /// @param rowsTrackIndexDstar DStar table candidate object
+  /// @param rowsTrackIndexD0 D0 table candidate object
+  /// @param tracks track table with Cov object 
+  /// @param bcWithTimeStamps Bunch Crossing with timestamps
   template <bool dopvRefit = false, typename CandsDstar>
   void runCreatorDstar(aod::Collisions const& collisions,
                        CandsDstar const& rowsTrackIndexDstar,
@@ -145,7 +153,6 @@ struct HfCandidateCreatorDstar {
     LOG(info) << "candidate loop starts";
     // loop over suspected DStar Candidate
     for (const auto& rowTrackIndexDstar : rowsTrackIndexDstar) {
-      
 
       auto trackPi = rowTrackIndexDstar.template prong0_as<aod::TracksWCov>();         // Template
       auto prongD0 = rowTrackIndexDstar.template prongD0_as<aod::Hf2ProngsWOStatus>(); // Template
@@ -170,8 +177,6 @@ struct HfCandidateCreatorDstar {
       //..................................................Doubt: Should I apply a condition of (collisionPiId == collisionD0Id)
 
       /// Set the magnetic field from ccdb.
-      /// The static instance of the propagator was already modified in the HFTrackIndexSkimCreator,  .....................Doubt: Which propagator? Is it propagator to PCA? (Line 762 in traclindexSkimCreator)
-      /// but this is not true when running on Run2 data/MC already converted into AO2Ds.
       auto bc = collision.template bc_as<aod::BCsWithTimestamps>();
       if (runNumber != bc.runNumber()) {                                                   
         LOG(info) << ">>>>>>>>>>>> Current run number: " << runNumber;                     
@@ -233,14 +238,9 @@ struct HfCandidateCreatorDstar {
       trackD0Prong0_ParVar0.propagateToDCA(primaryVertex, bz, &impactParameter0);
       trackD0Prong1_ParVar1.propagateToDCA(primaryVertex, bz, &impactParameter1);
 
-      // What the below function will do ? Can we use this function to get D0Prongs' param at Pv
-      // So that momenta of these can be added to soft pi momentum?
-      // trackD0Prong1_ParVar1.propagateParamToDCA()
-
       // Propagating Soft Pi to DCA
       o2::dataformats::DCA impactParameterPi;
       trackPi_ParVar.propagateToDCA(primaryVertex, bz, &impactParameterPi);
-      // trackPi_ParVar.propagateParamToDCA(primaryVertex,bz,&impactParameterPi); //Doubt............ How this line is different from above?
       hDcaXYProngsD0->Fill(trackD0Prong0.pt(), impactParameter0.getY() * toMicrometers);
       hDcaXYProngsD0->Fill(trackD0Prong1.pt(), impactParameter1.getY() * toMicrometers);
       hDcaZProngsD0->Fill(trackD0Prong0.pt(), impactParameter0.getZ() * toMicrometers);
@@ -263,7 +263,7 @@ struct HfCandidateCreatorDstar {
       massKPi = RecoDecay::m(arrayMomenta, std::array{massK, massPi});
 
       // Calculation of kinematics for inv mass
-      std::array<float, 3> pVecPi = {trackPi.px(), trackPi.py(), trackPi.pz()};
+      // std::array<float, 3> pVecPi = {trackPi.px(), trackPi.py(), trackPi.pz()};
       auto pVecD0 = RecoDecay::pVec(pVecD0Prong0, pVecD0Prong1);
       // auto pD0 = RecoDecay::p(pVecD0);
       // D0 pt vector
@@ -277,7 +277,7 @@ struct HfCandidateCreatorDstar {
       // auto InvMassDStarPiK = RecoDecay::m(std::array{pVecPi, pVecD0}, std::array{massPi, massPiK});
       // auto InvMassDStarKPi = RecoDecay::m(std::array{pVecPi, pVecD0}, std::array{massPi, massKPi});
       // ..............Doubt: Does reflection symmetry not matter in Dstar calculation?
-      auto InvMassDStar = RecoDecay::m(std::array{pVecPi,pVecD0Prong0,pVecD0Prong1},std::array{massPi,massPi,massK});
+      // auto InvMassDStar = RecoDecay::m(std::array{pVecPi,pVecD0Prong0,pVecD0Prong1},std::array{massPi,massPi,massK});
 
       // Soft pi momentum vector
       std::array<float, 3> SoftPipVec;
@@ -307,7 +307,9 @@ struct HfCandidateCreatorDstar {
                      primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
                      SoftPipVec[0], SoftPipVec[1], SoftPipVec[2],SoftPipT,
                      impactParameterPi.getY(), std::sqrt(impactParameterPi.getSigmaY2()),
-                     pVecD0[0], pVecD0[1], pVecD0[2]);
+                     pVecD0[0], pVecD0[1], pVecD0[2],
+                     pVecD0Prong0[0], pVecD0Prong0[1], pVecD0Prong0[2],
+                     pVecD0Prong1[0], pVecD0Prong1[1], pVecD0Prong1[2]);
       // Fill candidate Table for D0
       D0CandTable(collision.globalIndex(),
                   primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
@@ -322,7 +324,7 @@ struct HfCandidateCreatorDstar {
                   prongD0.hfflag());
 
       if (fillHistograms) {
-        hDeltaMassDStar->Fill(InvMassDStar - massPiK);
+        // hDeltaMassDStar->Fill(InvMassDStar - massPiK);
         // hDeltaMassDStar->Fill(InvMassDStarKPi - massKPi);
         hMassD0->Fill(massPiK);
         hMassD0->Fill(massKPi);
@@ -360,23 +362,69 @@ struct HfCandidateCreatorDstar {
 };
 
 struct HfCandidateCreatorDstarExpression {
-  Spawns<aod::HfD0FromDstarExt> rowCandidateProng2;
+  Spawns<aod::HfD0FromDstarExt> rowsCandidateD0;
+  Produces<aod::HfDStarMCRec> rowsMcMatchRec;
+  Produces<aod::HfDStarMCGen> rowsMcMatchGen;
 
   void init(InitContext const&) {}
 
   /// Perform MC Matching.
-  void processMc(aod::TracksWMc const& tracks,
+  void processMc(aod::TracksWMc const& tracks, aod::HfCandDStarBase const& rowsCandidateDstar,
                  aod::McParticles const& mcParticles)
   {
+    rowsCandidateD0->bindExternalIndices(&tracks);
     /// complete this function of mc matching after solving doubts from experts.
+    int indexRec = -1;
+    int8_t sign = 0;
+    int8_t flag = 0;
+    int8_t origin = 0;
+
+    // Match reconstructed candidates.
+    for(auto & rowCandidateDstar:rowsCandidateDstar){
+      flag =0;
+      origin = 0;
+      auto GlobalIndex = rowCandidateDstar.globalIndex();
+      auto D0Candidate = rowsCandidateD0->iteratorAt(GlobalIndex);
+      
+      // auto SoftPi = rowCandidateDstar.prongPi();
+      auto SoftPi = rowCandidateDstar.prongPi_as<aod::TracksWMc>();
+
+      auto arrayDaughters = std::array{SoftPi,D0Candidate.prong0_as<aod::TracksWMc>(),D0Candidate.prong1_as<aod::TracksWMc>()};
+
+      // D*± --> π±  D0(bar)
+      indexRec = RecoDecay::getMatchedMCRec(mcParticles,arrayDaughters,pdg::Code::kDStar,std::array{+kPiPlus,+kPiPlus,-kKPlus},true,&sign,2);
+      if(indexRec > -1){
+        flag = sign*(1 << DecayType::DstarToPiD0);
+      }
+
+      //check wether the particle is non-promt (from a B0 hadron)
+      if(flag != 0){
+        auto particle = mcParticles.iteratorAt(indexRec);
+        origin = RecoDecay::getCharmHadronOrigin(mcParticles,particle);
+      }
+
+      rowsMcMatchRec(flag,origin);
+    }
+
+    // Match generated particles.
+    for(const auto& particle: mcParticles){
+      flag = 0;
+      origin = 0;
+
+      // D*± --> π±  D0(bar)
+      if(RecoDecay::isMatchedMCGen(mcParticles,particle,pdg::Code::kDStar,std::array{+kPiPlus,+kPiPlus,-kKPlus},true,&sign,2)){
+        flag = sign* (1<<DecayType::DstarToPiD0);
+      }
+      //check wether the particle is non-promt (from a B0 hadron)
+      if(flag != 0){
+        origin =RecoDecay::getCharmHadronOrigin(mcParticles,particle);
+      }
+      rowsMcMatchGen(flag,origin);
+    }
   }
 
   PROCESS_SWITCH(HfCandidateCreatorDstarExpression, processMc, "Process MC", false);
 };
-
-// Very Imp
-// After Filling Both tables (1) HfCandDStarBase & (2) HfCand2ProngExt = HfCand2Prong, join them and use
-// them in further selector class.
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {

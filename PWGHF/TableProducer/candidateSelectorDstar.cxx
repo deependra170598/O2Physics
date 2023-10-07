@@ -2,6 +2,8 @@
 #include "Framework/runDataProcessing.h"
 #include "Framework/Logger.h"
 
+#include "Framework/O2DatabasePDGPlugin.h"
+
 #include "Common/Core/TrackSelectorPID.h"
 #include "PWGHF/DataModel/CandidateReconstructionTables.h"
 #include "PWGHF/DataModel/CandidateSelectionTables.h"
@@ -18,6 +20,7 @@ using namespace o2::analysis;
 
 // Struct to applying Dstar selection cuts
 struct HfCandidateSelctorDstar {
+  Service<o2::framework::O2DatabasePDG> o2ServicePDG;
   Produces<aod::HfSelD0> hfSelD0Candidate;
   Produces<aod::HfSelDstar> hfSelDstarCandidate;
 
@@ -76,9 +79,11 @@ struct HfCandidateSelctorDstar {
 
   using TracksSel = soa::Join<aod::TracksWDcaExtra, aod::TracksPidPi, aod::TracksPidKa>;
 
-
+  double massPi, massK, massD0;
   void init (InitContext& initContext){
-
+    massPi = o2ServicePDG->Mass(211);
+    massK = o2ServicePDG->Mass(311);
+    massD0 = o2ServicePDG->Mass(421);
   }
 
 
@@ -187,8 +192,40 @@ struct HfCandidateSelctorDstar {
   }
   
 
-  bool selectionTopolConjugate(){
+  
+
+
+  bool selectionTopolConjugate(aod::HfD0fromDstar::iterator const & d0candidate ,aod::HfCandDStarBase::iterator const & dstarCandidate){
+    auto dstarpT = dstarCandidate.candDStarpt();
+    auto pTBin = findBin(dstarconfigurable.binsPtForDstar,dstarpT);
+    if(pTBin = -1){
+      return false;
+    }
+    auto SoftPi = dstarCandidate.prongPi();
+    auto ProngD0 = dstarCandidate.prongD0();
+    auto PosProng0 = ProngD0.prong0();
+    auto NegProng1 = ProngD0.prong1();
+    // Selection of Dstar+
+    if(SoftPi.sign() > 0.){
+      auto Mpipik = std::array{massPi,massPi,massK};
+      auto InvDstar = dstarCandidate.dstarInvMass(Mpipik);
+      auto Mpik = std::array{massPi,massK};
+      auto InvD0 = d0candidate.d0m(Mpik);
+      if(std::abs(InvDstar-InvD0)> dstarconfigurable.cutsForDstar->get(pTBin,"DeltaMDstar")){
+        return false;
+      }
+    }else if(SoftPi.sign()<0){
+      auto Mpikpi = std::array{massPi,massK,massPi};
+      auto InvDstar = dstarCandidate.dstarInvMass(Mpikpi);
+      auto Mkpi = std::array{massK,massPi};
+      auto InvD0 = d0candidate.d0m(Mkpi);
+      if(std::abs(InvDstar-InvD0)>dstarconfigurable.cutsForDstar->get(pTBin,"DeltaMDstar")){
+        return false;
+      }
+    }
     
+
+    return true;
   }
 
 
