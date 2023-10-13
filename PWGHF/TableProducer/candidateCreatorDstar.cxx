@@ -16,7 +16,6 @@
 /// \author Deependra Sharma <deependra.sharma@cern.ch>, IITB
 /// \author Fabrizio Grosa <fabrizio.grosa@cern.ch>, CERN
 
-
 #include "DCAFitter/DCAFitterN.h"
 #include "Framework/AnalysisTask.h"
 #include "Framework/runDataProcessing.h"
@@ -43,9 +42,8 @@ using HfDstarsWOStatusAndPvRefitInfo = soa::Join<aod::HfDstars, aod::HfPvRefitDs
 using Hf2ProngsWOStatus = aod::Hf2Prongs;
 } // namespace o2::aod
 
-
 /// Reconstruction of D* decay candidates
-struct HfCandidateCreatorDstar{
+struct HfCandidateCreatorDstar {
   Service<o2::framework::O2DatabasePDG> o2ServicePDG;
   Produces<aod::HfD0FromDstarBase> D0CandTable;
   Produces<aod::HfCandDStarBase> DStarCandTable;
@@ -107,7 +105,7 @@ struct HfCandidateCreatorDstar{
     // }
     LOG(info) << "Init Function Invoked";
     ccdb->setURL(ccdbUrl);
-    ccdb->setCaching(true);                 
+    ccdb->setCaching(true);
     ccdb->setLocalObjectValidityChecking(); // set the flag to check object validity before CCDB query
     LOG(info) << "Retriving ccdb object";
     auto rectification = ccdb->get<o2::base::MatLayerCylSet>(ccdbPathLut); // retrieve an object of type T from CCDB as stored under path; will use the timestamp member
@@ -151,10 +149,10 @@ struct HfCandidateCreatorDstar{
     // loop over suspected DStar Candidate
     for (const auto& rowTrackIndexDstar : rowsTrackIndexDstar) {
 
-      auto trackPi = rowTrackIndexDstar.template prong0_as<aod::TracksWCov>();         
-      auto prongD0 = rowTrackIndexDstar.template prongD0_as<aod::Hf2ProngsWOStatus>(); 
-      auto trackD0Prong0 = prongD0.template prong0_as<aod::TracksWCov>();              
-      auto trackD0Prong1 = prongD0.template prong1_as<aod::TracksWCov>();              
+      auto trackPi = rowTrackIndexDstar.template prong0_as<aod::TracksWCov>();
+      auto prongD0 = rowTrackIndexDstar.template prongD0_as<aod::Hf2ProngsWOStatus>();
+      auto trackD0Prong0 = prongD0.template prong0_as<aod::TracksWCov>();
+      auto trackD0Prong1 = prongD0.template prong1_as<aod::TracksWCov>();
 
       auto collision = rowTrackIndexDstar.collision();
 
@@ -197,8 +195,8 @@ struct HfCandidateCreatorDstar{
 
       // Doubt:................Below, track object are at secondary vertex!
       // < track param propagated to V0 candidate (no check for the candidate validity). propagateTracksToVertex must be called in advance
-      auto trackD0ProngParVar0 = df.getTrack(0); 
-      auto trackD0ProngParVar1 = df.getTrack(1); 
+      auto trackD0ProngParVar0 = df.getTrack(0);
+      auto trackD0ProngParVar1 = df.getTrack(1);
 
       std::array<float, 3> pVecD0Prong0;
       std::array<float, 3> pVecD0Prong1;
@@ -264,7 +262,7 @@ struct HfCandidateCreatorDstar{
       // Soft pi momentum vector
       std::array<float, 3> SoftPipVec;
       trackPiParVar.getPxPyPzGlo(SoftPipVec);
-      
+
       // Dstar momentum
       auto pVecDStar = RecoDecay::pVec(pVecD0, SoftPipVec);
       auto pxDStar = pVecDStar.at(0);
@@ -276,13 +274,12 @@ struct HfCandidateCreatorDstar{
 
       // Fill candidate Table for DStar
       DStarCandTable(collision.globalIndex(),
-                    primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
-                    rowTrackIndexDstar.prong0Id(), rowTrackIndexDstar.prongD0Id(),
-                    SoftPipVec[0], SoftPipVec[1], SoftPipVec[2],
-                    impactParameterPi.getY(), std::sqrt(impactParameterPi.getSigmaY2()),
-                    pVecD0Prong0[0], pVecD0Prong0[1], pVecD0Prong0[2],
-                    pVecD0Prong1[0], pVecD0Prong1[1], pVecD0Prong1[2]
-                    );
+                     primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
+                     rowTrackIndexDstar.prong0Id(), rowTrackIndexDstar.prongD0Id(),
+                     SoftPipVec[0], SoftPipVec[1], SoftPipVec[2],
+                     impactParameterPi.getY(), std::sqrt(impactParameterPi.getSigmaY2()),
+                     pVecD0Prong0[0], pVecD0Prong0[1], pVecD0Prong0[2],
+                     pVecD0Prong1[0], pVecD0Prong1[1], pVecD0Prong1[2]);
       // Fill candidate Table for D0
       D0CandTable(collision.globalIndex(),
                   primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
@@ -328,10 +325,9 @@ struct HfCandidateCreatorDstar{
     runCreatorDstar<false>(collisions, rowsTrackIndexDstar, rowsTrackIndexD0, tracks, bcWithTimeStamps);
   }
   PROCESS_SWITCH(HfCandidateCreatorDstar, processNoRefit, " process function with no PV refit", false);
-
 };
 
-struct HfCandidateCreatorDstarExpression{
+struct HfCandidateCreatorDstarExpression {
   Spawns<aod::HfD0FromDstarExt> rowsCandidateD0;
   Produces<aod::HfCand2ProngMcRec> rowsMcMatchRecD0;
   Produces<aod::HfCand2ProngMcGen> rowsMcMatchGenD0;
@@ -343,19 +339,22 @@ struct HfCandidateCreatorDstarExpression{
   void init(InitContext const&) {}
 
   /// Perform MC Matching.
-  void processMc(aod::TracksWMc const& tracks,aod::McParticles const& mcParticles){
+  void processMc(aod::TracksWMc const& tracks, aod::McParticles const& mcParticles)
+  {
     rowsCandidateD0->bindExternalIndices(&tracks);
     rowsCandidateDstar->bindExternalIndices(&tracks);
 
-    int indexRecDstar = -1, indexRecD0 =-1;
+    int indexRecDstar = -1, indexRecD0 = -1;
     int8_t signDstar = 0, signD0 = 0;
     int8_t flagDstar = 0, flagD0 = 0;
     int8_t originDstar = 0, originD0 = 0;
 
     // Match reconstructed candidates.
-    for( const auto& rowCandidateDstar : *rowsCandidateDstar){
-      flagDstar = 0; flagD0 = 0;
-      originDstar = 0; originD0 = 0;
+    for (const auto& rowCandidateDstar : *rowsCandidateDstar) {
+      flagDstar = 0;
+      flagD0 = 0;
+      originDstar = 0;
+      originD0 = 0;
 
       auto dstarIndex = rowCandidateDstar.globalIndex();
       auto D0Candidate = rowsCandidateD0->iteratorAt(dstarIndex);
@@ -367,14 +366,13 @@ struct HfCandidateCreatorDstarExpression{
       // D*± --> π±  D0(bar)
       indexRecDstar = RecoDecay::getMatchedMCRec(mcParticles, arrayDaughtersDstar, pdg::Code::kDStar, std::array{+kPiPlus, +kPiPlus, -kKPlus}, true, &signDstar, 2);
       // D0(bar) --> π± K∓
-      indexRecD0 = RecoDecay::getMatchedMCRec(mcParticles,arrayDaughtersofD0,pdg::Code::kD0,std::array{+kPiPlus, -kKPlus},true, &signD0);
-      
+      indexRecD0 = RecoDecay::getMatchedMCRec(mcParticles, arrayDaughtersofD0, pdg::Code::kD0, std::array{+kPiPlus, -kKPlus}, true, &signD0);
 
-      if(indexRecDstar > -1){
-        flagDstar = signDstar * (1<<DecayType::DstarToPiD0);
+      if (indexRecDstar > -1) {
+        flagDstar = signDstar * (1 << DecayType::DstarToPiD0);
       }
-      if(indexRecD0 >-1){
-        flagD0 = signD0 * (1<<DecayType::D0ToPiK);
+      if (indexRecD0 > -1) {
+        flagD0 = signD0 * (1 << DecayType::D0ToPiK);
       }
 
       // check wether the particle is non-promt (from a B0 hadron)
@@ -382,37 +380,39 @@ struct HfCandidateCreatorDstarExpression{
         auto particleDstar = mcParticles.iteratorAt(indexRecDstar);
         originDstar = RecoDecay::getCharmHadronOrigin(mcParticles, particleDstar);
       }
-      if(flagD0 != 0){
+      if (flagD0 != 0) {
         auto partilceD0 = mcParticles.iteratorAt(indexRecD0);
-        originD0 = RecoDecay::getCharmHadronOrigin(mcParticles,partilceD0);
+        originD0 = RecoDecay::getCharmHadronOrigin(mcParticles, partilceD0);
       }
       rowsMcMatchRec(flagDstar, originDstar);
-      rowsMcMatchRecD0(flagD0,originD0);
+      rowsMcMatchRecD0(flagD0, originD0);
     }
 
     // Match generated particles.
     for (const auto& particle : mcParticles) {
-      flagDstar = 0; flagD0 = 0;
-      originDstar = 0; originD0 = 0;
+      flagDstar = 0;
+      flagD0 = 0;
+      originDstar = 0;
+      originD0 = 0;
 
       // D*± --> π±  D0(bar)
       if (RecoDecay::isMatchedMCGen(mcParticles, particle, pdg::Code::kDStar, std::array{+kPiPlus, +kPiPlus, -kKPlus}, true, &signDstar, 2)) {
         flagDstar = signDstar * (1 << DecayType::DstarToPiD0);
       }
       // D0(bar) --> π± K∓
-      if(RecoDecay::isMatchedMCGen(mcParticles,particle,pdg::Code::kD0,std::array{+kPiPlus, -kKPlus},true,&signD0)){
-        flagD0 = signD0 * (1<<DecayType::D0ToPiK);
+      if (RecoDecay::isMatchedMCGen(mcParticles, particle, pdg::Code::kD0, std::array{+kPiPlus, -kKPlus}, true, &signD0)) {
+        flagD0 = signD0 * (1 << DecayType::D0ToPiK);
       }
 
       // check wether the particle is non-promt (from a B0 hadron)
       if (flagDstar != 0) {
         originDstar = RecoDecay::getCharmHadronOrigin(mcParticles, particle);
       }
-      if(flagD0 != 0){
+      if (flagD0 != 0) {
         originD0 = RecoDecay::getCharmHadronOrigin(mcParticles, particle);
       }
       rowsMcMatchGen(flagDstar, originDstar);
-      rowsMcMatchGenD0(flagD0,originD0);
+      rowsMcMatchGenD0(flagD0, originD0);
     }
   }
   PROCESS_SWITCH(HfCandidateCreatorDstarExpression, processMc, "Process MC", false);
@@ -420,9 +420,7 @@ struct HfCandidateCreatorDstarExpression{
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {
-  return WorkflowSpec
-  {
+  return WorkflowSpec{
     adaptAnalysisTask<HfCandidateCreatorDstar>(cfgc),
-    adaptAnalysisTask<HfCandidateCreatorDstarExpression>(cfgc)
-  };
+    adaptAnalysisTask<HfCandidateCreatorDstarExpression>(cfgc)};
 }
