@@ -82,6 +82,63 @@ class HfHelper
     return candidate.cosThetaStar(std::array{o2::analysis::pdg::MassKPlus, o2::analysis::pdg::MassPiPlus}, o2::analysis::pdg::MassD0, 0);
   }
 
+  // D*(±) --> D0(bar) + π(±)
+  struct D0FromDstar {
+    template <typename T>
+    auto ctD0(const T& candidate)
+    {
+      return candidate.d0ct(o2::analysis::pdg::MassD0);
+    }
+
+    template <typename T>
+    auto yD0(const T& candidate)
+    {
+      return candidate.d0y(o2::analysis::pdg::MassD0);
+    }
+
+    template <typename T>
+    auto eD0(const T& candidate)
+    {
+      return candidate.d0e(o2::analysis::pdg::MassD0);
+    }
+
+    template <typename T>
+    auto invMassD0ToPiK(const T& candidate)
+    {
+      return candidate.d0m(std::array{o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassKPlus});
+    }
+
+    template <typename T>
+    auto invMassD0barToKPi(const T& candidate)
+    {
+      return candidate.d0m(std::array{o2::analysis::pdg::MassKPlus, o2::analysis::pdg::MassPiPlus});
+    }
+
+    template <typename T>
+    auto cosThetaStarD0(const T& candidate)
+    {
+      return candidate.d0cosThetaStar(std::array{o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassKPlus}, o2::analysis::pdg::MassD0, 1);
+    }
+
+    template <typename T>
+    auto cosThetaStarD0bar(const T& candidate)
+    {
+      return candidate.d0cosThetaStar(std::array{o2::analysis::pdg::MassKPlus, o2::analysis::pdg::MassPiPlus}, o2::analysis::pdg::MassD0, 0);
+    }
+
+    template <typename T>
+    auto invMassDstar(const T& candidate)
+    {
+      return candidate.dstarInvMass(std::array{o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassKPlus});
+    }
+
+    template <typename T>
+    auto invMassAntiDstar(const T& candidate)
+    {
+      return candidate.dstarInvMass(std::array{o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassKPlus, o2::analysis::pdg::MassPiPlus});
+    }
+  };
+
   // J/ψ
 
   template <typename T>
