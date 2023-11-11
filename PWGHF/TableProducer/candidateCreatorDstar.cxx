@@ -103,14 +103,14 @@ struct HfCandidateCreatorDstar {
     // if(processPvrefit && processNoRefit){ //............Warning! remove this if any of this function is removed
     //   LOGP(fatal, "Only one process function between processPvRefit and processNoPvRefit can be enabled at a time.");
     // }
-    LOG(info) << "Init Function Invoked";
+    // LOG(info) << "Init Function Invoked";
     ccdb->setURL(ccdbUrl);
     ccdb->setCaching(true);
     ccdb->setLocalObjectValidityChecking(); // set the flag to check object validity before CCDB query
-    LOG(info) << "Retriving ccdb object";
+    // LOG(info) << "Retriving ccdb object";
     auto rectification = ccdb->get<o2::base::MatLayerCylSet>(ccdbPathLut); // retrieve an object of type T from CCDB as stored under path; will use the timestamp member
     lut = o2::base::MatLayerCylSet::rectifyPtrFromFile(rectification);
-    LOG(info) << "Successfully Retrived";
+    // LOG(info) << "Successfully Retrived";
     runNumber = 0;
     bz = 0;
 
@@ -134,7 +134,7 @@ struct HfCandidateCreatorDstar {
                        aod::TracksWCov const& tracks,
                        aod::BCsWithTimestamps const& bcWithTimeStamps)
   {
-    LOG(info) << "runCreatorDstar function called";
+    // LOG(info) << "runCreatorDstar function called";
     // D0-prong vertex fitter
     o2::vertexing::DCAFitterN<2> df;
     df.setPropagateToPCA(propagateToPCA);
@@ -145,7 +145,7 @@ struct HfCandidateCreatorDstar {
     df.setUseAbsDCA(useAbsDCA);
     df.setWeightedFinalPCA(useWeightedFinalPCA);
 
-    LOG(info) << "candidate loop starts";
+    // LOG(info) << "candidate loop starts";
     // loop over suspected DStar Candidate
     for (const auto& rowTrackIndexDstar : rowsTrackIndexDstar) {
 
@@ -174,10 +174,10 @@ struct HfCandidateCreatorDstar {
       /// Set the magnetic field from ccdb.
       auto bc = collision.template bc_as<aod::BCsWithTimestamps>();
       if (runNumber != bc.runNumber()) {
-        LOG(info) << ">>>>>>>>>>>> Current run number: " << runNumber;
+        // LOG(info) << ">>>>>>>>>>>> Current run number: " << runNumber;
         initCCDB(bc, runNumber, ccdb, isRun2 ? ccdbPathGrp : ccdbPathGrpMag, lut, isRun2); // Sets up the grp object for magnetic field (w/o matCorr for propagation)
         bz = o2::base::Propagator::Instance()->getNominalBz();
-        LOG(info) << ">>>>>>>>>>>> Magnetic field: " << bz;
+        // LOG(info) << ">>>>>>>>>>>> Magnetic field: " << bz;
       }
       df.setBz(bz);
 
@@ -301,7 +301,7 @@ struct HfCandidateCreatorDstar {
         hPtDStar->Fill(ptDStar);
       }
     }
-    LOG(info) << "Candidate for loop ends";
+    // LOG(info) << "Candidate for loop ends";
   }
 
   void processPvrefit(aod::Collisions const& collisions,

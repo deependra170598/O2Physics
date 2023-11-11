@@ -9,10 +9,9 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file candidateSelectionDstar.cxx
+/// \file candidateSelectiorDstar.cxx
 /// \brief Selection on D* decay candidates
 ///
-/// \author Vít Kučera <vit.kucera@cern.ch>, CERN
 /// \author Deependra Sharma <deependra.sharma@cern.ch>, IITB
 /// \author Fabrizio Grosa <fabrizio.grosa@cern.ch>, CERN
 
@@ -113,7 +112,11 @@ struct HfCandidateSelctorDstar {
     if (candidate.d0impactParameterProduct() > cutsForD0->get(pTBin, "d0d0")) {
       return false;
     }
-    // // cosine of pointing angle
+    // cosine of pointing angle
+    if(candidate.d0cpa() < cutsForD0->get(pTBin,"cos pointing angle")){
+      return false;
+    }
+    // cosine of pointing angle XY
     if (candidate.d0cpaXY() < cutsForD0->get(pTBin, "cos pointing angle xy")) {
       return false;
     }
@@ -125,6 +128,9 @@ struct HfCandidateSelctorDstar {
     // Note: follwoing two cuts are not defined in namespace: hf_cuts_d0_to_pi_k of  SelectionCuts.h, while are defined in namespace: hf_cuts_dstar_to_pi_d0
     // Chi2PCA of secondary vertex reconstruction
     if (candidate.chi2PCA() > cutsForDstar->get(pTBin, "Chi2PCA")) {
+      return false;
+    }
+    if(candidate.d0impactParameterXY() > cutsForD0->get(pTBin,"DCA")){
       return false;
     }
     // d0NormalisedProng0,1
@@ -183,15 +189,17 @@ struct HfCandidateSelctorDstar {
     if ((dstarCandidate.ptSoftpiProng() < cutsForDstar->get(pTBin, "minpTSoftPi")) || (dstarCandidate.ptSoftpiProng() > cutsForDstar->get(pTBin, "maxpTSoftPi"))) {
       return false;
     }
+    //--------------------------------------------------------------------
     // selection on pT of D0Prong1,2
-    auto d0prong0 = d0Candidate.template prong0_as<TracksSel>();
-    auto d0prong1 = d0Candidate.template prong1_as<TracksSel>();
-    if (d0prong0.pt() < cutsForDstar->get(pTBin, "minpTD0_Prong0")) {
-      return false;
-    }
-    if (d0prong1.pt() < cutsForDstar->get(pTBin, "minpTD0_Prong1")) {
-      return false;
-    }
+    // auto d0prong0 = d0Candidate.template prong0_as<TracksSel>();
+    // auto d0prong1 = d0Candidate.template prong1_as<TracksSel>();
+    // if (d0prong0.pt() < cutsForDstar->get(pTBin, "minpTD0_Prong0")) {
+    //   return false;
+    // }
+    // if (d0prong1.pt() < cutsForDstar->get(pTBin, "minpTD0_Prong1")) {
+    //   return false;
+    // }
+    //---------------------------------------------------------------------
     // selection on D0Candidate
     if (!selectionTopolD0(d0Candidate)) {
       return false;
@@ -223,7 +231,15 @@ struct HfCandidateSelctorDstar {
       // auto Mpik = std::array{massPi,massK};
       // auto InvD0 = d0candidate.d0m(Mpik);
       auto InvD0 = hfHelper.invMassD0ToPiK(d0candidate);
-
+      if(std::abs(InvD0 - o2::analysis::pdg::MassD0) > cutsForD0->get(pTBin,"m")){
+        return false;
+      }
+      // cut on daughter pT
+      auto d0prong0 = d0candidate.template prong0_as<TracksSel>();
+      auto d0prong1 = d0candidate.template prong1_as<TracksSel>();
+      if(d0prong0.pt() < cutsForD0->get(pTBin, "pT Pi") || d0prong1.pt() < cutsForD0->get(pTBin, "pT K")){
+        return false;
+      }
       // LOGF(info,"+ %d,%f,%f",SoftPi.sign(),InvDstar,InvD0);
       if (std::abs(InvDstar - InvD0) > cutsForDstar->get(pTBin, "DeltaMDstar")) {
         return false;
@@ -245,7 +261,9 @@ struct HfCandidateSelctorDstar {
       // auto Mkpi = std::array{massK,massPi};
       // auto InvD0 = d0candidate.d0m(Mkpi);
       auto InvD0 = hfHelper.invMassD0barToKPi(d0candidate);
-
+      if(std::abs(InvD0 - o2::analysis::pdg::MassD0) > cutsForD0->get(pTBin,"m")){
+        return false;
+      }
       // LOGF(info,"- %d,%f,%f",SoftPi.sign(),InvDstar,InvD0);
       if (std::abs(InvDstar - InvD0) > cutsForDstar->get(pTBin, "DeltaMDstar")) {
         return false;
@@ -264,7 +282,7 @@ struct HfCandidateSelctorDstar {
 
   void process(TracksSel const&, aod::Hf2Prongs const&, aod::HfD0fromDstar const& rowsD0cand, aod::HfDstarCand const& rowsDstarCand)
   {
-    LOG(info) << "selector: processQA called";
+    // LOG(info) << "selector: processQA called";
     for (auto& DstarCand : rowsDstarCand) {
       auto dstarIndex = DstarCand.globalIndex();
       auto D0Cand = rowsD0cand.iteratorAt(dstarIndex);

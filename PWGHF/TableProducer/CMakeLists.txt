@@ -109,6 +109,11 @@ o2physics_add_dpl_workflow(candidate-spectra-dstar
                     SOURCES dstarSpectra.cxx
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
                     COMPONENT_NAME Analysis)
+
+o2physics_add_dpl_workflow(candidate-pt-dependent-spectra-dstar
+                    SOURCES pTdependentInvSpectra.cxx
+                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
+                    COMPONENT_NAME Analysis)
                     
 o2physics_add_dpl_workflow(candidate-selector-dplus-to-pi-k-pi
                     SOURCES candidateSelectorDplusToPiKPi.cxx
