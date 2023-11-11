@@ -1589,26 +1589,27 @@ DECLARE_SOA_DYNAMIC_COLUMN(D0ImpactParameterXY, d0impactParameterXY, //!
                            [](float xVtxP, float yVtxP, float zVtxP, float xVtxS, float yVtxS, float zVtxS, float px, float py, float pz) -> float { return RecoDecay::impParXY(std::array{xVtxP, yVtxP, zVtxP}, std::array{xVtxS, yVtxS, zVtxS}, std::array{px, py, pz}); });
 
 // Columns only for D* properties
-DECLARE_SOA_INDEX_COLUMN_FULL(ProngPi, prongPi, int, Tracks, "");                 // Softpi Index
-DECLARE_SOA_INDEX_COLUMN_FULL(ProngD0Cand, prondD0Cand, int, HfCand2Prong, "_0"); // D0 Index
-                                                                                  // SoftPiProng
-DECLARE_SOA_COLUMN(ImpParamSoftPiProng, impParamSoftPiProng, float);
-DECLARE_SOA_COLUMN(ErrorImpParamSoftPiProng, errorImpParamSoftPiProng, float);
-DECLARE_SOA_DYNAMIC_COLUMN(NormalisedImpParamSoftPiProng, normalisedImpParamSoftPiProng,
+DECLARE_SOA_INDEX_COLUMN_FULL(ProngPi, prongPi, int, Tracks, "");                 //! soft-pion index
+DECLARE_SOA_INDEX_COLUMN_FULL(ProngD0Cand, prondD0Cand, int, HfCand2Prong, "_0"); //! D0 Index
+
+// soft pion prong
+DECLARE_SOA_COLUMN(ImpParamSoftPi, impParamSoftPi, float);
+DECLARE_SOA_COLUMN(ErrorImpParamSoftPi, errorImpParamSoftPi, float);
+DECLARE_SOA_DYNAMIC_COLUMN(NormalisedImpParamSoftPi, normalisedImpParamSoftPi,
                            [](float dca, float err) -> float { return dca / err; });
-DECLARE_SOA_COLUMN(PxSoftpiProng, pxSoftpiProng, float);
-DECLARE_SOA_COLUMN(PySoftpiProng, pySoftpiProng, float);
-DECLARE_SOA_COLUMN(PzSoftpiProng, pzSoftpiProng, float);
+DECLARE_SOA_COLUMN(PxSoftPi, pxSoftPi, float);
+DECLARE_SOA_COLUMN(PySoftPi, pySoftPi, float);
+DECLARE_SOA_COLUMN(PzSoftPi, pzSoftPi, float);
 // Dstar momenta
-DECLARE_SOA_EXPRESSION_COLUMN(DstarPx, dstarPx, float, 1.f * aod::hf_cand::pxProng0 + 1.f * aod::hf_cand::pxProng1 + 1.f * aod::hf_cand_dstar::pxSoftpiProng);
-DECLARE_SOA_EXPRESSION_COLUMN(DstarPy, dstarPy, float, 1.f * aod::hf_cand::pyProng0 + 1.f * aod::hf_cand::pyProng1 + 1.f * aod::hf_cand_dstar::pySoftpiProng);
-DECLARE_SOA_EXPRESSION_COLUMN(DstarPz, dstarPz, float, 1.f * aod::hf_cand::pzProng0 + 1.f * aod::hf_cand::pzProng1 + 1.f * aod::hf_cand_dstar::pzSoftpiProng);
+DECLARE_SOA_EXPRESSION_COLUMN(PxDstar, pxDstar, float, 1.f * aod::hf_cand::pxProng0 + 1.f * aod::hf_cand::pxProng1 + 1.f * aod::hf_cand_dstar::pxSoftPi);
+DECLARE_SOA_EXPRESSION_COLUMN(PyDstar, pyDstar, float, 1.f * aod::hf_cand::pyProng0 + 1.f * aod::hf_cand::pyProng1 + 1.f * aod::hf_cand_dstar::pySoftPi);
+DECLARE_SOA_EXPRESSION_COLUMN(PzDstar, pzDstar, float, 1.f * aod::hf_cand::pzProng0 + 1.f * aod::hf_cand::pzProng1 + 1.f * aod::hf_cand_dstar::pzSoftPi);
 // Inv Mass (accpet mass array of size 2 {Mπ , Mπ, Mk})
-DECLARE_SOA_DYNAMIC_COLUMN(DstarInvMass, dstarInvMass,
+DECLARE_SOA_DYNAMIC_COLUMN(InvMassDstar, invMassDstar,
                            [](float pxSoftPi, float pySoftPi, float pzSoftPi, float pxProng0, float pyProng0, float pzProng0, float pxProng1, float pyProng1, float pzProng1, const std::array<double, 3>& m)
                              -> float { return RecoDecay::m(std::array{std::array{pxSoftPi, pySoftPi, pzSoftPi}, std::array{pxProng0, pyProng0, pzProng0}, std::array{pxProng1, pyProng1, pzProng1}}, m); });
-DECLARE_SOA_DYNAMIC_COLUMN(PtSoftpiProng, ptSoftpiProng, [](float pxSoftPi, float pySoftPi) -> float { return RecoDecay::pt(pxSoftPi, pySoftPi); });
-DECLARE_SOA_DYNAMIC_COLUMN(SoftPiPvec, softPiPvec, [](float px, float py, float pz) -> std::array<float, 3> { return std::array{px, py, pz}; });
+DECLARE_SOA_DYNAMIC_COLUMN(PtSoftPi, ptSoftPi, [](float pxSoftPi, float pySoftPi) -> float { return RecoDecay::pt(pxSoftPi, pySoftPi); });
+DECLARE_SOA_DYNAMIC_COLUMN(PVecSoftPi, pVecSoftPi, [](float px, float py, float pz) -> std::array<float, 3> { return std::array{px, py, pz}; });
 
 // MC matching result:
 DECLARE_SOA_COLUMN(FlagMcMatchRec, flagMcMatchRec, int8_t); //! reconstruction level
@@ -1663,7 +1664,7 @@ DECLARE_SOA_TABLE(HfD0FromDstarBase, "AOD", "HFD0FROMDSTAR",
 DECLARE_SOA_EXTENDED_TABLE_USER(HfD0FromDstarExt, HfD0FromDstarBase, "HFD0FRMDSTREXT", hf_cand_dstar::D0Px, hf_cand_dstar::D0Py, hf_cand_dstar::D0Pz);
 using HfD0fromDstar = HfD0FromDstarExt;
 
-DECLARE_SOA_TABLE(HfCandDStarBase, "AOD", "HFDSTARCAND",
+DECLARE_SOA_TABLE(HfCandDstarBase, "AOD", "HFDSTARCANDBASE",
                   o2::soa::Index<>,
                   hf_cand::CollisionId,
                   // Primary vertex
@@ -1671,35 +1672,35 @@ DECLARE_SOA_TABLE(HfCandDStarBase, "AOD", "HFDSTARCAND",
                   hf_cand_dstar::ProngPiId,  // Index column to softPi track table
                   hf_track_index::ProngD0Id, // Index column points to Hf2Prongs table filled by indexSkimcreator
                   // Softpi
-                  hf_cand_dstar::PxSoftpiProng, hf_cand_dstar::PySoftpiProng, hf_cand_dstar::PzSoftpiProng,
-                  hf_cand_dstar::ImpParamSoftPiProng, hf_cand_dstar::ErrorImpParamSoftPiProng,
+                  hf_cand_dstar::PxSoftPi, hf_cand_dstar::PySoftPi, hf_cand_dstar::PzSoftPi,
+                  hf_cand_dstar::ImpParamSoftPi, hf_cand_dstar::ErrorImpParamSoftPi,
                   // Two pronges of D0
                   hf_cand::PxProng0, hf_cand::PyProng0, hf_cand::PzProng0,
                   hf_cand::PxProng1, hf_cand::PyProng1, hf_cand::PzProng1,
                   // Dynamic
-                  hf_cand_dstar::PtSoftpiProng<hf_cand_dstar::PxSoftpiProng, hf_cand_dstar::PySoftpiProng>,
-                  hf_cand_dstar::SoftPiPvec<hf_cand_dstar::PxSoftpiProng, hf_cand_dstar::PySoftpiProng, hf_cand_dstar::PzSoftpiProng>,
-                  hf_cand_dstar::NormalisedImpParamSoftPiProng<hf_cand_dstar::ImpParamSoftPiProng, hf_cand_dstar::ErrorImpParamSoftPiProng>,
-                  hf_cand::Pt<hf_cand_dstar::DstarPx, hf_cand_dstar::DstarPy>,
-                  hf_cand::P<hf_cand_dstar::DstarPx, hf_cand_dstar::DstarPy, hf_cand_dstar::DstarPz>,
-                  hf_cand::PVector<hf_cand_dstar::DstarPx, hf_cand_dstar::DstarPy, hf_cand_dstar::DstarPz>,
-                  hf_cand::Eta<hf_cand_dstar::DstarPx, hf_cand_dstar::DstarPy, hf_cand_dstar::DstarPz>,
-                  hf_cand::Phi<hf_cand_dstar::DstarPx, hf_cand_dstar::DstarPy>,
-                  hf_cand::Y<hf_cand_dstar::DstarPx, hf_cand_dstar::DstarPy, hf_cand_dstar::DstarPz>,
-                  hf_cand::E<hf_cand_dstar::DstarPx, hf_cand_dstar::DstarPy, hf_cand_dstar::DstarPz>,
-                  hf_cand_dstar::DstarInvMass<hf_cand_dstar::PxSoftpiProng, hf_cand_dstar::PySoftpiProng, hf_cand_dstar::PzSoftpiProng, hf_cand::PxProng0, hf_cand::PyProng0, hf_cand::PzProng0, hf_cand::PxProng1, hf_cand::PyProng1, hf_cand::PzProng1>);
+                  hf_cand_dstar::PtSoftPi<hf_cand_dstar::PxSoftPi, hf_cand_dstar::PySoftPi>,
+                  hf_cand_dstar::PVecSoftPi<hf_cand_dstar::PxSoftPi, hf_cand_dstar::PySoftPi, hf_cand_dstar::PzSoftPi>,
+                  hf_cand_dstar::NormalisedImpParamSoftPi<hf_cand_dstar::ImpParamSoftPi, hf_cand_dstar::ErrorImpParamSoftPi>,
+                  hf_cand::Pt<hf_cand_dstar::PxDstar, hf_cand_dstar::PyDstar>,
+                  hf_cand::P<hf_cand_dstar::PxDstar, hf_cand_dstar::PyDstar, hf_cand_dstar::PzDstar>,
+                  hf_cand::PVector<hf_cand_dstar::PxDstar, hf_cand_dstar::PyDstar, hf_cand_dstar::PzDstar>,
+                  hf_cand::Eta<hf_cand_dstar::PxDstar, hf_cand_dstar::PyDstar, hf_cand_dstar::PzDstar>,
+                  hf_cand::Phi<hf_cand_dstar::PxDstar, hf_cand_dstar::PyDstar>,
+                  hf_cand::Y<hf_cand_dstar::PxDstar, hf_cand_dstar::PyDstar, hf_cand_dstar::PzDstar>,
+                  hf_cand::E<hf_cand_dstar::PxDstar, hf_cand_dstar::PyDstar, hf_cand_dstar::PzDstar>,
+                  hf_cand_dstar::InvMassDstar<hf_cand_dstar::PxSoftPi, hf_cand_dstar::PySoftPi, hf_cand_dstar::PzSoftPi, hf_cand::PxProng0, hf_cand::PyProng0, hf_cand::PzProng0, hf_cand::PxProng1, hf_cand::PyProng1, hf_cand::PzProng1>);
 
 // extended table with expression columns that can be used as arguments of dynamic columns
-DECLARE_SOA_EXTENDED_TABLE_USER(HfDstarExt, HfCandDStarBase, "HFDSTAREXT", hf_cand_dstar::DstarPx, hf_cand_dstar::DstarPy, hf_cand_dstar::DstarPz);
+DECLARE_SOA_EXTENDED_TABLE_USER(HfDstarExt, HfCandDstarBase, "HFDSTAREXT", hf_cand_dstar::PxDstar, hf_cand_dstar::PyDstar, hf_cand_dstar::PzDstar);
 using HfDstarCand = HfDstarExt;
 
 // table with results of reconstruction level MC matching
-DECLARE_SOA_TABLE(HfDStarMCRec, "AOD", "HFDSTARMCREC",
+DECLARE_SOA_TABLE(HfDstarMCRec, "AOD", "HFDSTARMCREC",
                   hf_cand_dstar::FlagMcMatchRec,
                   hf_cand_dstar::OriginMcRec);
 
 // table with results of generator level MC matching
-DECLARE_SOA_TABLE(HfDStarMCGen, "AOD", "HFDSTARMCGEN",
+DECLARE_SOA_TABLE(HfDstarMCGen, "AOD", "HFDSTARMCGEN",
                   hf_cand_dstar::FlagMcMatchGen,
                   hf_cand_dstar::OriginMcGen);
 

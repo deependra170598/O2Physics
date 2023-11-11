@@ -56,23 +56,6 @@ DECLARE_SOA_TABLE(HfSelD0, "AOD", "HFSELD0", //!
 DECLARE_SOA_TABLE(HfMlD0, "AOD", "HFMLD0", //!
                   hf_sel_candidate_d0::MlProbD0);
 
-namespace hf_sel_candidate_dstar
-{
-DECLARE_SOA_COLUMN(IsSelDstarToD0Pi, isSelDstarToD0Pi, int);
-DECLARE_SOA_COLUMN(IsRecoD0Flag, isRecoHfFlag, int);
-DECLARE_SOA_COLUMN(IsRecoTopol, isRecoTopol, int);
-DECLARE_SOA_COLUMN(IsRecoCand, isRecoCand, int);
-DECLARE_SOA_COLUMN(IsRecoPid, isRecoPid, int);
-
-} // namespace hf_sel_candidate_dstar
-
-DECLARE_SOA_TABLE(HfSelDstarToD0Pi, "AOD", "HFSELDSTART",
-                  hf_sel_candidate_dstar::IsSelDstarToD0Pi,
-                  hf_sel_candidate_dstar::IsRecoD0Flag,
-                  hf_sel_candidate_dstar::IsRecoTopol,
-                  hf_sel_candidate_dstar::IsRecoCand,
-                  hf_sel_candidate_dstar::IsRecoPid);
-
 namespace hf_sel_candidate_d0_parametrized_pid
 {
 DECLARE_SOA_COLUMN(IsSelD0NoPid, isSelD0NoPid, int);                 //!
@@ -147,6 +130,23 @@ DECLARE_SOA_TABLE(HfSelDsToKKPi, "AOD", "HFSELDS", //!
 
 DECLARE_SOA_TABLE(HfMlDsToKKPi, "AOD", "HFMLDS", //!
                   hf_sel_candidate_ds::MlProbDsToKKPi);
+
+namespace hf_sel_candidate_dstar
+{
+DECLARE_SOA_COLUMN(IsSelDstarToD0Pi, isSelDstarToD0Pi, bool); //! checking if all four of following check pass
+DECLARE_SOA_COLUMN(IsRecoD0Flag, isRecoHfFlag, bool);         //! checking DecayType::D0ToPiK of D0prong
+DECLARE_SOA_COLUMN(IsRecoTopol, isRecoTopol, bool);           //! checking conjugate independent Topological selection on Dstar
+DECLARE_SOA_COLUMN(IsRecoCand, isRecoCand, bool);             //! checking conjugate dependent Topological selecton on Dstar
+DECLARE_SOA_COLUMN(IsRecoPid, isRecoPid, bool);               //! checking PID selection on daughters of D0Prong
+
+} // namespace hf_sel_candidate_dstar
+
+DECLARE_SOA_TABLE(HfSelDstarToD0Pi, "AOD", "HFSELDSTART", //! Table stores information about selection flag on Dstar candidate
+                  hf_sel_candidate_dstar::IsSelDstarToD0Pi,
+                  hf_sel_candidate_dstar::IsRecoD0Flag,
+                  hf_sel_candidate_dstar::IsRecoTopol,
+                  hf_sel_candidate_dstar::IsRecoCand,
+                  hf_sel_candidate_dstar::IsRecoPid);
 
 namespace hf_sel_candidate_lc
 {

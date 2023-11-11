@@ -99,21 +99,6 @@ o2physics_add_dpl_workflow(candidate-selector-d0
                     SOURCES candidateSelectorD0.cxx
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2Physics::MLCore
                     COMPONENT_NAME Analysis)
-
-o2physics_add_dpl_workflow(candidate-selector-dstar
-                    SOURCES candidateSelectorDstar.cxx
-                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2Physics::MLCore
-                    COMPONENT_NAME Analysis)
-
-o2physics_add_dpl_workflow(candidate-spectra-dstar
-                    SOURCES dstarSpectra.cxx
-                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
-                    COMPONENT_NAME Analysis)
-
-o2physics_add_dpl_workflow(candidate-pt-dependent-spectra-dstar
-                    SOURCES pTdependentInvSpectra.cxx
-                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore
-                    COMPONENT_NAME Analysis)
                     
 o2physics_add_dpl_workflow(candidate-selector-dplus-to-pi-k-pi
                     SOURCES candidateSelectorDplusToPiKPi.cxx
@@ -122,6 +107,11 @@ o2physics_add_dpl_workflow(candidate-selector-dplus-to-pi-k-pi
 
 o2physics_add_dpl_workflow(candidate-selector-ds-to-k-k-pi
                     SOURCES candidateSelectorDsToKKPi.cxx
+                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2Physics::MLCore
+                    COMPONENT_NAME Analysis)
+
+o2physics_add_dpl_workflow(candidate-selector-dstar
+                    SOURCES candidateSelectorDstar.cxx
                     PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2Physics::MLCore
                     COMPONENT_NAME Analysis)
 

@@ -129,13 +129,13 @@ class HfHelper
     template <typename T>
     auto invMassDstar(const T& candidate)
     {
-      return candidate.dstarInvMass(std::array{o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassKPlus});
+      return candidate.invMassDstar(std::array{o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassKPlus});
     }
 
     template <typename T>
     auto invMassAntiDstar(const T& candidate)
     {
-      return candidate.dstarInvMass(std::array{o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassKPlus, o2::analysis::pdg::MassPiPlus});
+      return candidate.invMassDstar(std::array{o2::analysis::pdg::MassPiPlus, o2::analysis::pdg::MassKPlus, o2::analysis::pdg::MassPiPlus});
     }
   };
 

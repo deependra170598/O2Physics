@@ -17,15 +17,16 @@
 /// \author Fabrizio Grosa <fabrizio.grosa@cern.ch>, CERN
 
 #include "DCAFitter/DCAFitterN.h"
+
 #include "Framework/AnalysisTask.h"
+#include "Framework/AnalysisDataModel.h"
 #include "Framework/runDataProcessing.h"
-#include "Framework/O2DatabasePDGPlugin.h"
+// #include "Framework/O2DatabasePDGPlugin.h"
 
 #include "Common/Core/trackUtilities.h"
-#include "PWGHF/DataModel/CandidateReconstructionTables.h"
-#include "PWGHF/Utils/utilsBfieldCCDB.h"
 
-#include "Framework/AnalysisDataModel.h"
+#include "PWGHF/Utils/utilsBfieldCCDB.h"
+#include "PWGHF/DataModel/CandidateReconstructionTables.h"
 
 using namespace o2;
 using namespace o2::framework;
@@ -38,15 +39,14 @@ namespace o2::aod
 //   using HfDstarsWStatus_nd_PvRefitInfo =soa::Join<aod::HfDstars, aod::HfCutStatusDstar, aod::HfPvRefitDstar>;
 //   using Hf2ProngsWStatus = soa:: Join<aod::Hf2Prongs, aod::HfCutStatus2Prong>;
 
-using HfDstarsWOStatus = aod::HfDstars;
-using HfDstarsWOStatusAndPvRefitInfo = soa::Join<aod::HfDstars, aod::HfPvRefitDstar>;
-using Hf2ProngsWOStatus = aod::Hf2Prongs;
+using HfDstarsWithPVRefitInfo = soa::Join<aod::HfDstars, aod::HfPvRefitDstar>;
 } // namespace o2::aod
 
 /// Reconstruction of D* decay candidates
 struct HfCandidateCreatorDstar {
-  Produces<aod::HfD0FromDstarBase> D0CandTable;
-  Produces<aod::HfCandDStarBase> DStarCandTable;
+  Produces<aod::HfD0FromDstarBase> rowCandD0Base;
+  Produces<aod::HfCandDstarBase> rowCandDstarBase;
+
   Configurable<bool> fillHistograms{"fillHistograms", true, "fill histograms"};
 
   // magnetic field setting from CCDB
@@ -67,11 +67,11 @@ struct HfCandidateCreatorDstar {
   Configurable<bool> useWeightedFinalPCA{"useWeightedFinalPCA", false, "Recalculate vertex position using track covariances, effective only if useAbsDCA is true"};
 
   Service<o2::ccdb::BasicCCDBManager> ccdb; // From utilsBfieldCCDB.h
-  o2::base::MatLayerCylSet* lut;            // From DCAFitterN.h
+  o2::base::MatLayerCylSet* lut;            // From MatLayercylSet.h
   o2::base::Propagator::MatCorrType matCorr = o2::base::Propagator::MatCorrType::USEMatCorrLUT;
   int runNumber;
   double bz;
-  float toMicrometers = 10000.; // from cm to µm
+  float cmToMicrometerts = 10000.; // from cm to µm
 
   double massPi, massK, massD0;
 
@@ -100,7 +100,7 @@ struct HfCandidateCreatorDstar {
   /// @param
   void init(InitContext const&)
   {
-    // if(processPvrefit && processNoRefit){ //............Warning! remove this if any of this function is removed
+    // if(processPvRefit && processNoPvRefit){ //............Warning! remove this if any of this function is removed
     //   LOGP(fatal, "Only one process function between processPvRefit and processNoPvRefit can be enabled at a time.");
     // }
     // LOG(info) << "Init Function Invoked";
@@ -121,16 +121,16 @@ struct HfCandidateCreatorDstar {
 
   /// @brief function for secondary vertex reconstruction and candidate creator
   /// @tparam CandsDstar Table type of candidate
-  /// @tparam dopvRefit True/False PV refit option
+  /// @tparam doPvRefit True/False PV refit option
   /// @param collisions collision object
   /// @param rowsTrackIndexDstar DStar table candidate object
   /// @param rowsTrackIndexD0 D0 table candidate object
   /// @param tracks track table with Cov object
   /// @param bcWithTimeStamps Bunch Crossing with timestamps
-  template <bool dopvRefit = false, typename CandsDstar>
+  template <bool doPvRefit, typename CandsDstar>
   void runCreatorDstar(aod::Collisions const& collisions,
                        CandsDstar const& rowsTrackIndexDstar,
-                       aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
+                       aod::Hf2Prongs const& rowsTrackIndexD0,
                        aod::TracksWCov const& tracks,
                        aod::BCsWithTimestamps const& bcWithTimeStamps)
   {
@@ -150,7 +150,7 @@ struct HfCandidateCreatorDstar {
     for (const auto& rowTrackIndexDstar : rowsTrackIndexDstar) {
 
       auto trackPi = rowTrackIndexDstar.template prong0_as<aod::TracksWCov>();
-      auto prongD0 = rowTrackIndexDstar.template prongD0_as<aod::Hf2ProngsWOStatus>();
+      auto prongD0 = rowTrackIndexDstar.template prongD0_as<aod::Hf2Prongs>();
       auto trackD0Prong0 = prongD0.template prong0_as<aod::TracksWCov>();
       auto trackD0Prong1 = prongD0.template prong1_as<aod::TracksWCov>();
 
@@ -204,7 +204,7 @@ struct HfCandidateCreatorDstar {
       trackD0ProngParVar1.getPxPyPzGlo(pVecD0Prong1);
 
       // This modifies track momenta!
-      if constexpr (dopvRefit) {
+      if constexpr (doPvRefit) {
         /// use PV refit
         /// Using it in the *HfCand3ProngBase/HfCand2ProngBase* all dynamic columns shall take it into account
         // coordinates
@@ -235,13 +235,13 @@ struct HfCandidateCreatorDstar {
       // Propagating Soft Pi to DCA
       o2::dataformats::DCA impactParameterPi;
       trackPiParVar.propagateToDCA(primaryVertex, bz, &impactParameterPi);
-      hDcaXYProngsD0->Fill(trackD0Prong0.pt(), impactParameter0.getY() * toMicrometers);
-      hDcaXYProngsD0->Fill(trackD0Prong1.pt(), impactParameter1.getY() * toMicrometers);
-      hDcaZProngsD0->Fill(trackD0Prong0.pt(), impactParameter0.getZ() * toMicrometers);
-      hDcaZProngsD0->Fill(trackD0Prong1.pt(), impactParameter1.getZ() * toMicrometers);
+      hDcaXYProngsD0->Fill(trackD0Prong0.pt(), impactParameter0.getY() * cmToMicrometerts);
+      hDcaXYProngsD0->Fill(trackD0Prong1.pt(), impactParameter1.getY() * cmToMicrometerts);
+      hDcaZProngsD0->Fill(trackD0Prong0.pt(), impactParameter0.getZ() * cmToMicrometerts);
+      hDcaZProngsD0->Fill(trackD0Prong1.pt(), impactParameter1.getZ() * cmToMicrometerts);
 
-      hDCAXYPi->Fill(trackPi.pt(), impactParameterPi.getY() * toMicrometers);
-      hDCAZPi->Fill(trackPi.pt(), impactParameterPi.getZ() * toMicrometers);
+      hDCAXYPi->Fill(trackPi.pt(), impactParameterPi.getY() * cmToMicrometerts);
+      hDCAZPi->Fill(trackPi.pt(), impactParameterPi.getZ() * cmToMicrometerts);
 
       // get uncertainty of the decay length
       double phi, theta;
@@ -260,11 +260,11 @@ struct HfCandidateCreatorDstar {
       auto ptD0 = RecoDecay::pt(ptVecD0);
 
       // Soft pi momentum vector
-      std::array<float, 3> SoftPipVec;
-      trackPiParVar.getPxPyPzGlo(SoftPipVec);
+      std::array<float, 3> pVecSoftPi;
+      trackPiParVar.getPxPyPzGlo(pVecSoftPi);
 
       // Dstar momentum
-      auto pVecDStar = RecoDecay::pVec(pVecD0, SoftPipVec);
+      auto pVecDStar = RecoDecay::pVec(pVecD0, pVecSoftPi);
       auto pxDStar = pVecDStar.at(0);
       auto pyDStar = pVecDStar.at(1);
       // Dstar ptVec
@@ -273,25 +273,25 @@ struct HfCandidateCreatorDstar {
       auto ptDStar = RecoDecay::pt(ptVecDStar);
 
       // Fill candidate Table for DStar
-      DStarCandTable(collision.globalIndex(),
-                     primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
-                     rowTrackIndexDstar.prong0Id(), rowTrackIndexDstar.prongD0Id(),
-                     SoftPipVec[0], SoftPipVec[1], SoftPipVec[2],
-                     impactParameterPi.getY(), std::sqrt(impactParameterPi.getSigmaY2()),
-                     pVecD0Prong0[0], pVecD0Prong0[1], pVecD0Prong0[2],
-                     pVecD0Prong1[0], pVecD0Prong1[1], pVecD0Prong1[2]);
+      rowCandDstarBase(collision.globalIndex(),
+                       primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
+                       rowTrackIndexDstar.prong0Id(), rowTrackIndexDstar.prongD0Id(),
+                       pVecSoftPi[0], pVecSoftPi[1], pVecSoftPi[2],
+                       impactParameterPi.getY(), std::sqrt(impactParameterPi.getSigmaY2()),
+                       pVecD0Prong0[0], pVecD0Prong0[1], pVecD0Prong0[2],
+                       pVecD0Prong1[0], pVecD0Prong1[1], pVecD0Prong1[2]);
       // Fill candidate Table for D0
-      D0CandTable(collision.globalIndex(),
-                  primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
-                  secondaryVertex[0], secondaryVertex[1], secondaryVertex[2],
-                  errorDecayLength, errorDecayLengthXY,
-                  chi2PCA,
-                  pVecD0Prong0[0], pVecD0Prong0[1], pVecD0Prong0[2],
-                  pVecD0Prong1[0], pVecD0Prong1[1], pVecD0Prong1[2],
-                  impactParameter0.getY(), impactParameter1.getY(),
-                  std::sqrt(impactParameter0.getSigmaY2()), std::sqrt(impactParameter1.getSigmaY2()),
-                  prongD0.prong0Id(), prongD0.prong1Id(),
-                  prongD0.hfflag());
+      rowCandD0Base(collision.globalIndex(),
+                    primaryVertex.getX(), primaryVertex.getY(), primaryVertex.getZ(),
+                    secondaryVertex[0], secondaryVertex[1], secondaryVertex[2],
+                    errorDecayLength, errorDecayLengthXY,
+                    chi2PCA,
+                    pVecD0Prong0[0], pVecD0Prong0[1], pVecD0Prong0[2],
+                    pVecD0Prong1[0], pVecD0Prong1[1], pVecD0Prong1[2],
+                    impactParameter0.getY(), impactParameter1.getY(),
+                    std::sqrt(impactParameter0.getSigmaY2()), std::sqrt(impactParameter1.getSigmaY2()),
+                    prongD0.prong0Id(), prongD0.prong1Id(),
+                    prongD0.hfflag());
 
       if (fillHistograms) {
         hPtD0->Fill(ptD0);
@@ -304,42 +304,43 @@ struct HfCandidateCreatorDstar {
     // LOG(info) << "Candidate for loop ends";
   }
 
-  void processPvrefit(aod::Collisions const& collisions,
-                      aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
-                      aod::HfDstarsWOStatusAndPvRefitInfo const& rowsTrackIndexDstar,
+  void processPvRefit(aod::Collisions const& collisions,
+                      aod::Hf2Prongs const& rowsTrackIndexD0,
+                      aod::HfDstarsWithPVRefitInfo const& rowsTrackIndexDstar,
                       aod::TracksWCov const& tracks,
                       aod::BCsWithTimestamps const& bcWithTimeStamps)
   {
 
     runCreatorDstar<true>(collisions, rowsTrackIndexDstar, rowsTrackIndexD0, tracks, bcWithTimeStamps);
   }
-  PROCESS_SWITCH(HfCandidateCreatorDstar, processPvrefit, " process function with PV refit", true);
+  PROCESS_SWITCH(HfCandidateCreatorDstar, processPvRefit, " Run candidate creator with PV refit", false);
 
-  void processNoRefit(aod::Collisions const& collisions,
-                      aod::Hf2ProngsWOStatus const& rowsTrackIndexD0,
-                      aod::HfDstars const& rowsTrackIndexDstar,
-                      aod::TracksWCov const& tracks,
-                      aod::BCsWithTimestamps const& bcWithTimeStamps)
+  void processNoPvRefit(aod::Collisions const& collisions,
+                        aod::Hf2Prongs const& rowsTrackIndexD0,
+                        aod::HfDstars const& rowsTrackIndexDstar,
+                        aod::TracksWCov const& tracks,
+                        aod::BCsWithTimestamps const& bcWithTimeStamps)
   {
 
     runCreatorDstar<false>(collisions, rowsTrackIndexDstar, rowsTrackIndexD0, tracks, bcWithTimeStamps);
   }
-  PROCESS_SWITCH(HfCandidateCreatorDstar, processNoRefit, " process function with no PV refit", false);
+  PROCESS_SWITCH(HfCandidateCreatorDstar, processNoPvRefit, " Run candidate creator without PV refit", true);
 };
 
-struct HfCandidateCreatorDstarExpression {
+struct HfCandidateCreatorDstarExpressions {
   Spawns<aod::HfD0FromDstarExt> rowsCandidateD0;
   Produces<aod::HfCand2ProngMcRec> rowsMcMatchRecD0;
   Produces<aod::HfCand2ProngMcGen> rowsMcMatchGenD0;
 
   Spawns<aod::HfDstarExt> rowsCandidateDstar;
-  Produces<aod::HfDStarMCRec> rowsMcMatchRec;
-  Produces<aod::HfDStarMCGen> rowsMcMatchGen;
+  Produces<aod::HfDstarMCRec> rowsMcMatchRecDstar;
+  Produces<aod::HfDstarMCGen> rowsMcMatchGenDstar;
 
   void init(InitContext const&) {}
 
   /// Perform MC Matching.
-  void processMc(aod::TracksWMc const& tracks, aod::McParticles const& mcParticles)
+  void processMc(aod::TracksWMc const& tracks,
+                 aod::McParticles const& mcParticles)
   {
     rowsCandidateD0->bindExternalIndices(&tracks);
     rowsCandidateDstar->bindExternalIndices(&tracks);
@@ -357,11 +358,11 @@ struct HfCandidateCreatorDstarExpression {
       originD0 = 0;
 
       auto dstarIndex = rowCandidateDstar.globalIndex();
-      auto D0Candidate = rowsCandidateD0->iteratorAt(dstarIndex);
-      auto SoftPi = rowCandidateDstar.prongPi_as<aod::TracksWMc>();
+      auto candD0 = rowsCandidateD0->iteratorAt(dstarIndex);
+      auto candSoftPi = rowCandidateDstar.prongPi_as<aod::TracksWMc>();
 
-      auto arrayDaughtersDstar = std::array{SoftPi, D0Candidate.prong0_as<aod::TracksWMc>(), D0Candidate.prong1_as<aod::TracksWMc>()};
-      auto arrayDaughtersofD0 = std::array{D0Candidate.prong0_as<aod::TracksWMc>(), D0Candidate.prong1_as<aod::TracksWMc>()};
+      auto arrayDaughtersDstar = std::array{candSoftPi, candD0.prong0_as<aod::TracksWMc>(), candD0.prong1_as<aod::TracksWMc>()};
+      auto arrayDaughtersofD0 = std::array{candD0.prong0_as<aod::TracksWMc>(), candD0.prong1_as<aod::TracksWMc>()};
 
       // D*± --> π±  D0(bar)
       indexRecDstar = RecoDecay::getMatchedMCRec(mcParticles, arrayDaughtersDstar, pdg::Code::kDStar, std::array{+kPiPlus, +kPiPlus, -kKPlus}, true, &signDstar, 2);
@@ -384,7 +385,7 @@ struct HfCandidateCreatorDstarExpression {
         auto partilceD0 = mcParticles.iteratorAt(indexRecD0);
         originD0 = RecoDecay::getCharmHadronOrigin(mcParticles, partilceD0);
       }
-      rowsMcMatchRec(flagDstar, originDstar);
+      rowsMcMatchRecDstar(flagDstar, originDstar);
       rowsMcMatchRecD0(flagD0, originD0);
     }
 
@@ -411,16 +412,16 @@ struct HfCandidateCreatorDstarExpression {
       if (flagD0 != 0) {
         originD0 = RecoDecay::getCharmHadronOrigin(mcParticles, particle);
       }
-      rowsMcMatchGen(flagDstar, originDstar);
+      rowsMcMatchGenDstar(flagDstar, originDstar);
       rowsMcMatchGenD0(flagD0, originD0);
     }
   }
-  PROCESS_SWITCH(HfCandidateCreatorDstarExpression, processMc, "Process MC", false);
+  PROCESS_SWITCH(HfCandidateCreatorDstarExpressions, processMc, "Process MC", false);
 };
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {
   return WorkflowSpec{
     adaptAnalysisTask<HfCandidateCreatorDstar>(cfgc),
-    adaptAnalysisTask<HfCandidateCreatorDstarExpression>(cfgc)};
+    adaptAnalysisTask<HfCandidateCreatorDstarExpressions>(cfgc)};
 }
