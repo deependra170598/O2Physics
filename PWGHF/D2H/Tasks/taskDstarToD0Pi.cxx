@@ -200,7 +200,7 @@ struct HfTaskDstarToD0Pi {
         // get MC Mother particle
         auto indexMother = RecoDecay::getMother(rowsMcPartilces, candDstarMcRec.prong0_as<aod::TracksWMc>().mcParticle_as<CandDstarMcGen>(), o2::constants::physics::Pdg::kDStar, true, &signDstar, 2);
         auto particleMother = rowsMcPartilces.rawIteratorAt(indexMother); // What is difference between rawIterator() or iteratorAt() methods?
-        registry.fill(HIST("QA/hPtSkimDstarGenSig"), particleMother.pt());    // generator level pt
+        registry.fill(HIST("QA/hPtSkimDstarGenSig"), particleMother.pt()); // generator level pt
 
         registry.fill(HIST("QA/hPtVsYSkimDstarRecSig"), ptDstarRecSig, yDstarRecSig); // Skimed at level of trackIndexSkimCreator
         if (candDstarMcRec.isRecoTopol()) {                                           // if Topological selection are passed
