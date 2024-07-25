@@ -83,3 +83,8 @@ o2physics_add_executable(femtouniverse-cutculator
           SOURCES femtoUniverseCutCulator.cxx
           PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
           COMPONENT_NAME Analysis)
+
+o2physics_add_dpl_workflow(femtouniverse-pair-track-dstar
+          SOURCES femtoUniversePairTaskTrackDstar.cxx
+          PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
+          COMPONENT_NAME Analysis)

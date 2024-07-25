@@ -248,14 +248,6 @@ struct femtoUniverseProducerTask {
     Configurable<float> ConfD0D0barCandEtaCut{"ConfD0D0barCandEtaCut", 0.8, "max. cand. pseudorapidity"};
   } ConfD0Selection;
 
-  // Dstar mesons
-  struct : o2::framework::ConfigurableGroup{
-    Configurable<float> ConfDstarCandMaxY{"ConfDstarCandMaxY", -1., "max. cand. rapidity"};
-    Configurable<float> ConfDstarCandEtaCut{"ConfDstarCandEtaCut", 0.8, "max. cand. pseudorapidity"};
-  } ConfDstarSelection;
-
-  Filter DstarFilter = aod::hf_sel_candidate_dstar::isSelDstarToD0Pi == true;
-
   HfHelper hfHelper;
 
   bool IsKaonNSigma(float mom, float nsigmaTPCK, float nsigmaTOFK)
@@ -318,15 +310,12 @@ struct femtoUniverseProducerTask {
   float mMagField;
   Service<o2::ccdb::BasicCCDBManager> ccdb; /// Accessing the CCDB
 
-  std::vector<int> tmpIDtrack;        // this vector keeps track of the matching of the primary track table row <-> aod::track table global index
-
-
   void init(InitContext&)
   {
-    if ((doprocessFullData || doprocessTrackPhiData || doprocessTrackData || doprocessTrackV0 || doprocessTrackD0mesonData || doprocessTrackDstarData || doprocessTrackCentRun2Data || doprocessTrackCentRun3Data) == false && (doprocessFullMC || doprocessTrackMC || doprocessTrackMCTruth || doprocessTrackPhiMC) == false) {
+    if ((doprocessFullData || doprocessTrackPhiData || doprocessTrackData || doprocessTrackV0 || doprocessTrackD0mesonData || doprocessTrackCentRun2Data || doprocessTrackCentRun3Data) == false && (doprocessFullMC || doprocessTrackMC || doprocessTrackMCTruth) == false) {
       LOGF(fatal, "Neither processFullData nor processFullMC enabled. Please choose one.");
     }
-    if ((doprocessFullData || doprocessTrackPhiData || doprocessTrackData || doprocessTrackV0 || doprocessTrackD0mesonData || doprocessTrackDstarData || doprocessTrackCentRun2Data || doprocessTrackCentRun3Data) == true && (doprocessFullMC || doprocessTrackMC || doprocessTrackMCTruth || doprocessTrackPhiMC) == true) {
+    if ((doprocessFullData || doprocessTrackPhiData || doprocessTrackData || doprocessTrackV0 || doprocessTrackD0mesonData || doprocessTrackCentRun2Data || doprocessTrackCentRun3Data) == true && (doprocessFullMC || doprocessTrackMC || doprocessTrackMCTruth) == true) {
       LOGF(fatal,
            "Cannot enable process Data and process MC at the same time. "
            "Please choose one.");
@@ -646,7 +635,7 @@ struct femtoUniverseProducerTask {
   void fillTracks(TrackType const& tracks)
   {
     std::vector<int> childIDs = {0, 0}; // these IDs are necessary to keep track of the children
-    // std::vector<int> tmpIDtrack;        // this vector keeps track of the matching of the primary track table row <-> aod::track table global index
+    std::vector<int> tmpIDtrack;        // this vector keeps track of the matching of the primary track table row <-> aod::track table global index
 
     for (auto& track : tracks) {
       /// if the most open selection criteria are not fulfilled there is no
@@ -787,8 +776,7 @@ struct femtoUniverseProducerTask {
 
     for (auto const& hfCand : hfCands) {
 
-
-      if (!TESTBIT(hfCand.hfflag(), aod::hf_cand_2prong::DecayType::D0ToPiK)) {
+      if (!(hfCand.hfflag() & 1 << aod::hf_cand_2prong::DecayType::D0ToPiK)) {
         continue;
       }
 
@@ -889,202 +877,6 @@ struct femtoUniverseProducerTask {
         }
       }
     }
-  }
-
-  template <bool isMC, typename HfCandidate, typename TrackType, typename CollisionType>
-  void fillDstar(CollisionType const&, TrackType const&, HfCandidate const& hfCands)
-  {
-    std::vector<int> childIDs = {0, 0, 0}; // these IDs are necessary to keep track of the children
-    // std::vector<int> tmpIDtrack;        // this vector keeps track of the matching of the primary track table row <-> aod::track table global index
-    double invMassDstar = 0.0;
-    double invMassD0 = 0.0;
-    double deltaInvMassDstar = 0.0;
-    double invMassAntiDstar = 0.0;
-    double invMassD0bar = 0.0;
-    double deltaInvMassAntiDstar = 0.0;
-    bool isDstarAntiDstar = false;
-
-    if(!(hfCands.size()>0)){
-      return;
-    }
-    for (auto const& hfCand : hfCands) {
-
-      // can be removed since we already have selection flag from candidateSelectorDstarToD0Pi.cxx
-      if (!(hfCand.hfflag() & 1 << aod::hf_cand_2prong::DecayType::D0ToPiK)) {
-        continue;
-      }
-
-      // if (ConfD0Selection.ConfD0D0barCandMaxY >= 0. && std::abs(hfHelper.yD0(hfCand)) > ConfD0Selection.ConfD0D0barCandMaxY) {
-      //   continue;
-      // }
-
-
-      if (ConfDstarSelection.ConfDstarCandMaxY >= 0. && hfCand.yD0() > ConfDstarSelection.ConfDstarCandMaxY) {
-        continue;
-      }
-
-
-      if (std::abs(hfCand.eta()) > ConfDstarSelection.ConfDstarCandEtaCut ) {
-        continue;
-      }
-      //================================================================================================================================================
-      // int postrackID = hfCand.prong0().globalIndex();
-      int postrackID = hfCand.prong0Id(); // Index to first prong
-
-      // Not understood ========================================
-      int rowInPrimaryTrackTablePos = -1;
-      rowInPrimaryTrackTablePos = getRowDaughters(postrackID, tmpIDtrack);
-      childIDs[0] = rowInPrimaryTrackTablePos;
-      childIDs[1] = 0;
-      childIDs[2] = 0;
-      
-      LOGF(info,"rowInPrimaryTrackTablePos: %d",rowInPrimaryTrackTablePos);
-      // ======================================================
-
-      auto postrack = hfCand.template prong0_as<TrackType>();
-      auto negtrack = hfCand.template prong1_as<TrackType>();
-      auto softPi   = hfCand.template prongPi_as<TrackType>();
-
-      // if (hfCand.isSelD0() == 1 && hfCand.isSelD0bar() == 0) {
-      //   invMassD0 = hfHelper.invMassD0ToPiK(hfCand);
-      //   invMassD0bar = -hfHelper.invMassD0barToKPi(hfCand);
-      //   isD0D0bar = true;
-      // } else if (hfCand.isSelD0() == 0 && hfCand.isSelD0bar() == 1) {
-      //   invMassD0 = -hfHelper.invMassD0ToPiK(hfCand);
-      //   invMassD0bar = hfHelper.invMassD0barToKPi(hfCand);
-      //   isD0D0bar = true;
-      // } else if (hfCand.isSelD0() == 1 && hfCand.isSelD0bar() == 1) {
-      //   invMassD0 = hfHelper.invMassD0ToPiK(hfCand);
-      //   invMassD0bar = hfHelper.invMassD0barToKPi(hfCand);
-      //   isD0D0bar = true;
-      // } else {
-      //   invMassD0 = 0.0;
-      //   invMassD0bar = 0.0;
-      //   isD0D0bar = false;
-      // }
-
-      if(hfCand.isSelDstarToD0Pi()){
-        isDstarAntiDstar = true;
-        invMassDstar = hfCand.invMassDstar();
-        invMassD0 = hfCand.invMassD0();
-        invMassAntiDstar = hfCand.invMassAntiDstar();
-        invMassD0bar = hfCand.invMassD0Bar();
-        deltaInvMassDstar = invMassDstar - invMassD0;
-        deltaInvMassAntiDstar = invMassAntiDstar - invMassD0bar;
-      } else {
-        isDstarAntiDstar = false;
-        invMassDstar = -999.;
-        invMassD0 = -999.;
-        invMassAntiDstar = -999.;
-        invMassD0bar = -999.;
-        deltaInvMassAntiDstar = -999.;
-        deltaInvMassAntiDstar = -999.;
-      }
-
-      if (isDstarAntiDstar) {
-        outputParts(outputCollision.lastIndex(),
-                    // hfCand.ptProng0(),
-                    RecoDecay::pt(hfCand.pxProng0(), hfCand.pyProng0()),
-                    RecoDecay::eta(std::array{hfCand.pxProng0(), hfCand.pyProng0(), hfCand.pzProng0()}), // eta
-                    RecoDecay::phi(hfCand.pxProng0(), hfCand.pyProng0()),                                // phi
-                    aod::femtouniverseparticle::ParticleType::kDstarChild,
-                    -999, // cutContainerV0.at(femtoUniverseV0Selection::V0ContainerPosition::kPosCuts),
-                    -999, // cutContainerV0.at(femtoUniverseV0Selection::V0ContainerPosition::kPosPID),
-                    -999,
-                    childIDs,
-                    0,  // D0 mass
-                    0); // D0bar mass
-        const int rowOfPosTrack = outputParts.lastIndex();
-        /*if constexpr (isMC) {
-          fillMCParticle(tracks, o2::aod::femtouniverseparticle::ParticleType::kDmesonChild);
-        }*/
-        // int negtrackID = hfCand.prong1().globalIndex();
-        int negtrackID = hfCand.prong1Id();
-        int rowInPrimaryTrackTableNeg = -1;
-        rowInPrimaryTrackTableNeg = getRowDaughters(negtrackID, tmpIDtrack);
-        childIDs[0] = 0;
-        childIDs[1] = rowInPrimaryTrackTableNeg;
-        childIDs[2] = 0;
-
-      LOGF(info,"rowInPrimaryTrackTableNeg: %d",rowInPrimaryTrackTableNeg);
-
-
-
-        outputParts(outputCollision.lastIndex(),
-                    RecoDecay::pt(hfCand.pxProng0(), hfCand.pyProng0()),
-                    // hfCand.ptProng1(),
-                    RecoDecay::eta(std::array{hfCand.pxProng1(), hfCand.pyProng1(), hfCand.pzProng1()}), // eta
-                    RecoDecay::phi(hfCand.pxProng1(), hfCand.pyProng1()),                                // phi
-                    aod::femtouniverseparticle::ParticleType::kDstarChild,
-                    -999, // cutContainerV0.at(femtoUniverseV0Selection::V0ContainerPosition::kNegCuts),
-                    -999, // cutContainerV0.at(femtoUniverseV0Selection::V0ContainerPosition::kNegPID),
-                    -999,
-                    childIDs,
-                    0,
-                    0);
-        const int rowOfNegTrack = outputParts.lastIndex();
-        /*if constexpr (isMC) {
-        fillMCParticle(p2, o2::aod::femtouniverseparticle::ParticleType::kDmesonChild);
-        }*/
-
-        // int softPiID = hfCand.prongPi().globalIndex();
-        int softPiID = hfCand.prongPiId();
-        int rowInPrimaryTrackTableSoftPi = -1;
-        rowInPrimaryTrackTableSoftPi = getRowDaughters(softPiID, tmpIDtrack);
-        childIDs[0] = 0;
-        childIDs[1] = 0;
-        childIDs[2] = rowInPrimaryTrackTableSoftPi;
-
-      LOGF(info,"rowInPrimaryTrackTableSoftPi: %d",rowInPrimaryTrackTableSoftPi);
-
-
-
-        outputParts(outputCollision.lastIndex(),
-                    hfCand.ptSoftPi(),
-                    // hfCand.ptProng1(),
-                    RecoDecay::eta(std::array{hfCand.pxSoftPi(), hfCand.pySoftPi(), hfCand.pzSoftPi()}), // eta
-                    RecoDecay::phi(hfCand.pxSoftPi(), hfCand.pySoftPi()),                                // phi
-                    aod::femtouniverseparticle::ParticleType::kDstarChild,
-                    -999, // cutContainerV0.at(femtoUniverseV0Selection::V0ContainerPosition::kNegCuts),
-                    -999, // cutContainerV0.at(femtoUniverseV0Selection::V0ContainerPosition::kNegPID),
-                    -999,
-                    childIDs,
-                    0,
-                    0);
-        const int rowOfSoftPi = outputParts.lastIndex();
-        /*if constexpr (isMC) {
-        fillMCParticle(p2, o2::aod::femtouniverseparticle::ParticleType::kDmesonChild);
-        }*/
-
-        std::vector<int> indexChildID = {rowOfPosTrack, rowOfNegTrack, rowOfSoftPi};
-
-        outputParts(outputCollision.lastIndex(),
-                    hfCand.pt(),
-                    hfCand.eta(),
-                    hfCand.phi(),
-                    aod::femtouniverseparticle::ParticleType::kDstar,
-                    -999, // cut, cutContainerType
-                    -999, // PID, cutContainerType
-                    -999,
-                    indexChildID,
-                    deltaInvMassDstar,     // Dstar mass (mLambda)
-                    deltaInvMassAntiDstar); // Anti Dstar mass (mAntiLambda)
-
-        if (ConfIsDebug) {
-          fillDebugParticle<false, true>(postrack); // QA for positive daughter
-          fillDebugParticle<false, true>(negtrack); // QA for negative daughter
-          fillDebugParticle<false, true>(softPi); // QA for soft Pi
-          fillDebugParticle<false, true>(hfCand);   // QA for Dstar/ Anti Dstar
-        }
-        if constexpr (isMC) {
-          fillMCParticle(hfCand, o2::aod::femtouniverseparticle::ParticleType::kDstar);
-        }
-      }
-    }
-    LOGF(info,"size of tempId before clear: %d", tmpIDtrack.size());
-    tmpIDtrack.clear();
-    LOGF(info,"size of tempId after clear: %d", tmpIDtrack.size());
-
   }
 
   template <bool isMC, typename TrackType, typename CollisionType>
@@ -1328,7 +1120,7 @@ struct femtoUniverseProducerTask {
     fillTracks<true>(tracks);
   }
   PROCESS_SWITCH(femtoUniverseProducerTask, processTrackMC, "Provide MC data for track analysis", false);
-  
+
   void processTrackPhiMC(aod::FemtoFullCollisionMC const& col,
                          aod::BCsWithTimestamps const&,
                          soa::Join<aod::FemtoFullTracks, aod::McTrackLabels> const& tracks,
@@ -1386,24 +1178,6 @@ struct femtoUniverseProducerTask {
   }
   PROCESS_SWITCH(femtoUniverseProducerTask, processTrackD0mesonData,
                  "Provide experimental data for track D0 meson", false);
-
-
-  //Dstar 
-   void processTrackDstarData(aod::FemtoFullCollision const& col,
-                               aod::BCsWithTimestamps const&,
-                               soa::Filtered<aod::FemtoFullTracks> const& tracks,
-                               soa::Filtered<soa::Join<aod::HfD0FromDstar, aod::HfCandDstars, aod::HfSelDstarToD0Pi>> const& candidates)
-  {
-    // get magnetic field for run
-    getMagneticFieldTesla(col.bc_as<aod::BCsWithTimestamps>());
-    // fill the tables
-    fillCollisions<false>(col, tracks);
-    fillTracks<false>(tracks);
-    fillDstar<false>(col, tracks, candidates);
-  }
-  PROCESS_SWITCH(femtoUniverseProducerTask, processTrackDstarData,
-                 "Provide experimental data for track Dstar meson", false);
-
 
   void processTrackMCTruth(aod::McCollision const&,
                            soa::SmallGroups<soa::Join<aod::Collisions, aod::EvSels, aod::Mults, aod::McCollisionLabels>> const& collisions,

@@ -186,6 +186,9 @@ class FemtoUniverseParticleHisto
       } else if constexpr (mParticleType == o2::aod::femtouniverseparticle::ParticleType::kD0) {
         // D0/D0bar histograms
         tempFitVarAxisTitle = "D^{0}/#bar{D^{0}} invariant mass";
+      } else if constexpr (mParticleType == o2::aod::femtouniverseparticle::ParticleType::kDstar) {
+        // Dstar/AntiDstar histograms
+        tempFitVarAxisTitle = "D^{*}/#bar{D^{*}} invariant mass";
       } else {
         LOG(fatal) << "FemtoUniverseParticleHisto: Histogramming for requested object not defined - quitting!";
       }
