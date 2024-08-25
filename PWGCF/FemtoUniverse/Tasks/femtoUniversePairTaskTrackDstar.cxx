@@ -101,8 +101,8 @@ struct femtoUniversePairTaskTrackDstar {
     Configurable<int> ConfPDGCodeAntiDstar{"ConfPDGCodeAntiDstar", -413, "Anti Dstar - PDG code"};
     Configurable<float> ConfMinPtDstarAntiDstar{"ConfMinPtDstarAntiDstar", 3.0, "Dstar/AntiDstar sel. - min. pT"}; //need to change
     Configurable<float> ConfMaxPtDstarAntiDstar{"ConfMaxPtDstarAntiDstar", 8.0, "Dstar/AntiDstar sel. - max. pT"}; //need to change
-    Configurable<float> ConfMinInvMassDstarAntiDstar{"ConfMinInvMassDstarAntiDstar", 0.139, "Dstar/AntiDstar sel. - min. invMass"}; // need to change
-    Configurable<float> ConfMaxInvMassDstarAntiDstar{"ConfMaxInvMassDstarAntiDstar", 0.155, "Dstar/AntiDstar sel. - max. invMass"}; //need to change
+    Configurable<float> ConfMinInvMassDstarAntiDstar{"ConfMinInvMassDstarAntiDstar", 0.13, "Dstar/AntiDstar sel. - min. invMass"}; // need to change
+    Configurable<float> ConfMaxInvMassDstarAntiDstar{"ConfMaxInvMassDstarAntiDstar", 0.15, "Dstar/AntiDstar sel. - max. invMass"}; //need to change
   } ConfDstar;
 
   struct : o2::framework::ConfigurableGroup {
@@ -125,7 +125,9 @@ struct femtoUniversePairTaskTrackDstar {
 
   /// Partitions for particle 2
   Partition<FemtoFullParticles> partsAllDstar = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kDstar));
-  Partition<FemtoFullParticles> partsOnlyDstarAntiDstar = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kDstar)) && (aod::femtouniverseparticle::mLambda < 0.0f || aod::femtouniverseparticle::mAntiLambda < 0.0f);
+  //===============================================================================================================================================================================
+  //________________________________________________Doubt____________________________________________________________________________________________________________________________
+  Partition<FemtoFullParticles> partsOnlyDstarAntiDstar = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kDstar)) && ((aod::femtouniverseparticle::mLambda > 0.142f && aod::femtouniverseparticle::mLambda < 0.150f) || (aod::femtouniverseparticle::mAntiLambda > 0.142f && aod::femtouniverseparticle::mAntiLambda < 0.150f));
 
   /// Partition for Dstardaughters
   Partition<FemtoFullParticles> partsDstarChildren = aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kDstarChild);
@@ -173,7 +175,9 @@ struct femtoUniversePairTaskTrackDstar {
   Configurable<float> ConfCPRChosenRadii{"ConfCPRChosenRadii", 0.80, "Delta Eta cut for Close Pair Rejection"};
 
   FemtoUniverseFemtoContainer<femtoUniverseFemtoContainer::EventType::same, femtoUniverseFemtoContainer::Observable::kstar> sameEventFemtoCont;
+  FemtoUniverseFemtoContainer<femtoUniverseFemtoContainer::EventType::mixed, femtoUniverseFemtoContainer::Observable::kstar> mixedEventFemtoCont;
   FemtoUniverseAngularContainer<femtoUniverseAngularContainer::EventType::same, femtoUniverseAngularContainer::Observable::kstar> sameEventAngularCont;
+  FemtoUniverseAngularContainer<femtoUniverseAngularContainer::EventType::mixed, femtoUniverseAngularContainer::Observable::kstar> mixedEventAngularCont;
   FemtoUniversePairCleaner<aod::femtouniverseparticle::ParticleType::kTrack, aod::femtouniverseparticle::ParticleType::kDstar> pairCleaner;
   FemtoUniverseDetaDphiStar<aod::femtouniverseparticle::ParticleType::kTrack, aod::femtouniverseparticle::ParticleType::kDstar> pairCloseRejection;
   FemtoUniverseTrackSelection trackCuts;
@@ -331,9 +335,15 @@ struct femtoUniversePairTaskTrackDstar {
 
     sameEventFemtoCont.init(&resultRegistry, ConfkstarBins, ConfMultBins, ConfkTBins, ConfmTBins, ConfmultBins3D, ConfmTBins3D, ConfBothTracks.ConfIsMC, ConfBothTracks.ConfUse3D);
     sameEventAngularCont.init(&resultRegistry, ConfkstarBins, ConfMultBins, ConfkTBins, ConfmTBins, ConfmultBins3D, ConfmTBins3D, ConfBothTracks.ConfEtaBins, ConfBothTracks.ConfPhiBins, ConfBothTracks.ConfIsMC, ConfBothTracks.ConfUse3D);
+    mixedEventFemtoCont.init(&resultRegistry, ConfkstarBins, ConfMultBins, ConfkTBins, ConfmTBins, ConfmultBins3D, ConfmTBins3D, ConfBothTracks.ConfIsMC, ConfBothTracks.ConfUse3D);
+    mixedEventAngularCont.init(&resultRegistry, ConfkstarBins, ConfMultBins, ConfkTBins, ConfmTBins, ConfmultBins3D, ConfmTBins3D, ConfBothTracks.ConfEtaBins, ConfBothTracks.ConfPhiBins, ConfBothTracks.ConfIsMC, ConfBothTracks.ConfUse3D);
+
+
 
     sameEventFemtoCont.setPDGCodes(ConfDstar.ConfPDGCodeDstar, ConfTrack.ConfPDGCodeTrack);
     sameEventAngularCont.setPDGCodes(ConfDstar.ConfPDGCodeDstar, ConfTrack.ConfPDGCodeTrack);
+    mixedEventFemtoCont.setPDGCodes(ConfDstar.ConfPDGCodeDstar, ConfTrack.ConfPDGCodeTrack);
+    mixedEventAngularCont.setPDGCodes(ConfDstar.ConfPDGCodeDstar, ConfTrack.ConfPDGCodeTrack);
 
     pairCleaner.init(&qaRegistry);
     if (ConfIsCPR.value) {
@@ -366,8 +376,12 @@ struct femtoUniversePairTaskTrackDstar {
   void processDstar(o2::aod::FDCollision& col, FemtoFullParticles&)
   {
     auto groupPartsOnlyDstarAntiDstar = partsOnlyDstarAntiDstar->sliceByCached(aod::femtouniverseparticle::fdCollisionId, col.globalIndex(), cache);
+    // LOGF(info, " Size of only Dstar: %d", groupPartsOnlyDstarAntiDstar.size());
     auto groupPartsAllDstar = partsAllDstar->sliceByCached(aod::femtouniverseparticle::fdCollisionId, col.globalIndex(), cache);
+    // LOGF(info,"Size of AllDstar: %d", groupPartsAllDstar.size() );
     auto groupPartsDstarChildren = partsDstarChildren->sliceByCached(aod::femtouniverseparticle::fdCollisionId, col.globalIndex(), cache);
+    // LOGF(info,"Size of Dstar Childs: %d", groupPartsDstarChildren.size() );
+    
 
     // loop over all D mesons
     for (auto const& dstar : groupPartsAllDstar) {
@@ -391,20 +405,25 @@ struct femtoUniversePairTaskTrackDstar {
     for (auto const& dsAntids : groupPartsOnlyDstarAntiDstar) {
 
       registry.fill(HIST("hPtDstar"), dsAntids.pt());
+      
+      float massDstarParticle = dsAntids.mLambda();
+      float massDstarAntiparticle = dsAntids.mAntiLambda(); 
 
-      if (dsAntids.mLambda() > 0.0f && dsAntids.mAntiLambda() < 0.0f) {
-        registry.fill(HIST("hInvMassVsPtOnlyDstarAntiDstar"), dsAntids.mLambda(), dsAntids.pt());
-        if (dsAntids.mLambda() > ConfDstar.ConfMinInvMassDstarAntiDstar && dsAntids.mLambda() < ConfDstar.ConfMaxInvMassDstarAntiDstar) {
+      LOGF(info,"dsAntids mass D* (Piar Task): %f, massAntiD*: %f",massDstarParticle, massDstarAntiparticle);
+
+      if (massDstarParticle > 0.0 && massDstarAntiparticle < 0.0) {
+        registry.fill(HIST("hInvMassVsPtOnlyDstarAntiDstar"), massDstarParticle, dsAntids.pt());
+        if (massDstarParticle > ConfDstar.ConfMinInvMassDstarAntiDstar && massDstarParticle < ConfDstar.ConfMaxInvMassDstarAntiDstar) {
           registry.fill(HIST("hInvMassDstar"), dsAntids.mLambda());
         }
         registry.fill(HIST("hPtDstar"), dsAntids.pt());
         registry.fill(HIST("hPhiDstar"), dsAntids.phi());
         registry.fill(HIST("hEtaDstar"), dsAntids.eta());
       }
-      if (dsAntids.mLambda() < 0.0f && dsAntids.mAntiLambda() > 0.0f) {
-        registry.fill(HIST("hInvMassVsPtOnlyDstarAntiDstar"), dsAntids.mAntiLambda(), dsAntids.pt());
-        if (dsAntids.mAntiLambda() > ConfDstar.ConfMinInvMassDstarAntiDstar && dsAntids.mAntiLambda() < ConfDstar.ConfMaxInvMassDstarAntiDstar) {
-          registry.fill(HIST("hInvMassAntiDstar"), dsAntids.mAntiLambda());
+      if (massDstarParticle < 0.0 && massDstarAntiparticle > 0.0) {
+        registry.fill(HIST("hInvMassVsPtOnlyDstarAntiDstar"), massDstarAntiparticle, dsAntids.pt());
+        if (massDstarAntiparticle > ConfDstar.ConfMinInvMassDstarAntiDstar && massDstarAntiparticle < ConfDstar.ConfMaxInvMassDstarAntiDstar) {
+          registry.fill(HIST("hInvMassAntiDstar"), massDstarAntiparticle);
         }
         registry.fill(HIST("hPtAntiDstar"), dsAntids.pt());
         registry.fill(HIST("hPhiAntiDstar"), dsAntids.phi());
@@ -493,7 +512,86 @@ template <bool isMC, typename PartitionType, typename PartType>
     }
   }
   PROCESS_SWITCH(femtoUniversePairTaskTrackDstar, processSameEvent, "Enable processing same event", true);
+
+  
+/// This function processes the mixed event
+  /// \todo the trivial loops over the collisions and tracks should be factored out since they will be common to all combinations of T-T, T-V0, V0-V0, ...
+  /// \tparam PartitionType
+  /// \tparam PartType
+  /// \tparam isMC: enables Monte Carlo truth specific histograms
+  /// \param groupPartsTrack partition for the identified passed by the process function
+  /// \param groupPartsDstar partition for Dstar meson passed by the process function
+  /// \param parts femtoUniverseParticles table (in case of Monte Carlo joined with FemtoUniverseMCLabels)
+  /// \param magFieldTesla magnetic field of the collision
+  /// \param multCol multiplicity of the collision
+  template <bool isMC, typename PartitionType, typename PartType>
+  void doMixedEvent(PartitionType groupPartsTrack, PartitionType groupPartsDstar, PartType parts, float magFieldTesla, int multCol)
+  {
+
+    for (auto& [track, dstarcandidate] : combinations(CombinationsFullIndexPolicy(groupPartsTrack, groupPartsDstar))) {
+      if (ConfTrack.ConfIsTrackIdentified) {
+        if (!IsParticleNSigma(track.p(), trackCuts.getNsigmaTPC(track, o2::track::PID::Proton), trackCuts.getNsigmaTOF(track, o2::track::PID::Proton), trackCuts.getNsigmaTPC(track, o2::track::PID::Pion), trackCuts.getNsigmaTOF(track, o2::track::PID::Pion), trackCuts.getNsigmaTPC(track, o2::track::PID::Kaon), trackCuts.getNsigmaTOF(track, o2::track::PID::Kaon))) {
+          continue;
+        }
+      }
+      // // Set pT cut for Dstar/AntiDstar candidates
+      if (ConfUsePtCutForDstarAntiDstar) {
+        if (dstarcandidate.pt() < ConfDstar.ConfMinPtDstarAntiDstar && dstarcandidate.pt() > ConfDstar.ConfMaxPtDstarAntiDstar) {
+          continue;
+        }
+      }
+      // // Set inv. mass cut for Dstar/AntiDstar candidates
+      if (ConfUseMassCutForDstarAntiDstar) {
+        if ((dstarcandidate.mLambda() < ConfDstarAntiDstarSideBand.ConfSignalRegionMin && dstarcandidate.mLambda() > ConfDstarAntiDstarSideBand.ConfSignalRegionMax) || (dstarcandidate.mAntiLambda() < ConfDstarAntiDstarSideBand.ConfSignalRegionMin && dstarcandidate.mAntiLambda() > ConfDstarAntiDstarSideBand.ConfSignalRegionMax)) {
+          continue;
+        }
+      }
+      // // Close Pair Rejection
+      if (ConfIsCPR.value) {
+        if (pairCloseRejection.isClosePair(track, dstarcandidate, parts, magFieldTesla, femtoUniverseContainer::EventType::mixed)) {
+          continue;
+        }
+      }
+
+      mixedEventFemtoCont.setPair<isMC>(track, dstarcandidate, multCol, ConfBothTracks.ConfUse3D);
+      mixedEventAngularCont.setPair<isMC>(track, dstarcandidate, multCol, ConfBothTracks.ConfUse3D);
+    }
+  }
+
+  /// process function for to call doMixedEvent with Data
+  /// @param cols subscribe to the collisions table (Data)
+  /// @param parts subscribe to the femtoUniverseParticleTable
+  void processMixedEvent(o2::aod::FDCollisions& cols,
+                         FemtoFullParticles& parts)
+  {
+    for (auto& [collision1, collision2] : soa::selfCombinations(colBinning, 5, -1, cols, cols)) {
+
+      const int multiplicityCol = collision1.multNtr();
+      MixQaRegistry.fill(HIST("MixingQA/hMECollisionBins"), colBinning.getBin({collision1.posZ(), multiplicityCol}));
+
+      auto groupPartsTrack = partsTrack->sliceByCached(aod::femtouniverseparticle::fdCollisionId, collision2.globalIndex(), cache);
+      auto groupPartsAllDstar = partsAllDstar->sliceByCached(aod::femtouniverseparticle::fdCollisionId, collision1.globalIndex(), cache);
+      auto groupPartsOnlyDstarAntiDstar = partsOnlyDstarAntiDstar->sliceByCached(aod::femtouniverseparticle::fdCollisionId, collision1.globalIndex(), cache);
+
+      const auto& magFieldTesla1 = collision1.magField();
+      const auto& magFieldTesla2 = collision2.magField();
+
+      if (magFieldTesla1 != magFieldTesla2) {
+        continue;
+      }
+      /// \todo before mixing we should check whether both collisions contain a pair of particles!
+      // if (partsDstar.size() == 0 || nPart2Evt1 == 0 || nPart1Evt2 == 0 || partsTrack.size() == 0 ) continue;
+
+      if (ConfUseAllDstar) {
+        doMixedEvent<false>(groupPartsTrack, groupPartsAllDstar, parts, magFieldTesla1, multiplicityCol);
+      } else {
+        doMixedEvent<false>(groupPartsTrack, groupPartsOnlyDstarAntiDstar, parts, magFieldTesla1, multiplicityCol);
+      }
+    }
+  }
+  PROCESS_SWITCH(femtoUniversePairTaskTrackDstar, processMixedEvent, "Enable processing mixed events", false);
 };
+
 
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)

@@ -965,12 +965,20 @@ struct femtoUniverseProducerTask {
 
       if(hfCand.isSelDstarToD0Pi()){
         isDstarAntiDstar = true;
-        invMassDstar = hfCand.invMassDstar();
+        
         invMassD0 = hfCand.invMassD0();
-        invMassAntiDstar = hfCand.invMassAntiDstar();
+        invMassDstar = hfCand.invMassDstar();
+        
         invMassD0bar = hfCand.invMassD0Bar();
-        deltaInvMassDstar = invMassDstar - invMassD0;
-        deltaInvMassAntiDstar = invMassAntiDstar - invMassD0bar;
+        invMassAntiDstar = hfCand.invMassAntiDstar();
+
+        if(hfCand.signSoftPi() > 0.0){ // if particle is Dstar
+          deltaInvMassDstar = invMassDstar - invMassD0;
+          deltaInvMassAntiDstar = -999.0;
+        }else if(hfCand.signSoftPi() < 0.0){ // if particle is AntiDstar
+          deltaInvMassAntiDstar = invMassAntiDstar - invMassD0bar;
+          deltaInvMassDstar = -999.0;
+        }
       } else {
         isDstarAntiDstar = false;
         invMassDstar = -999.;
@@ -992,8 +1000,8 @@ struct femtoUniverseProducerTask {
                     -999, // cutContainerV0.at(femtoUniverseV0Selection::V0ContainerPosition::kPosPID),
                     -999,
                     childIDs,
-                    0,  // D0 mass
-                    0); // D0bar mass
+                    0, 
+                    0); 
         const int rowOfPosTrack = outputParts.lastIndex();
         /*if constexpr (isMC) {
           fillMCParticle(tracks, o2::aod::femtouniverseparticle::ParticleType::kDmesonChild);
@@ -1069,6 +1077,7 @@ struct femtoUniverseProducerTask {
                     indexChildID,
                     deltaInvMassDstar,     // Dstar mass (mLambda)
                     deltaInvMassAntiDstar); // Anti Dstar mass (mAntiLambda)
+                    LOGF(info,"A D* filled (producer task), masses: %f, %f",deltaInvMassDstar, deltaInvMassAntiDstar);
 
         if (ConfIsDebug) {
           fillDebugParticle<false, true>(postrack); // QA for positive daughter

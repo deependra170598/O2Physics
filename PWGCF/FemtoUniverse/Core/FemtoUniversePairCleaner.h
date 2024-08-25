@@ -129,6 +129,21 @@ class FemtoUniversePairCleaner
         return true;
       }
       return false;
+    }  else if constexpr (mPartOneType == o2::aod::femtouniverseparticle::ParticleType::kTrack && mPartTwoType == o2::aod::femtouniverseparticle::ParticleType::kDstar) {
+      /// Track-Dstar combination part1 is hadron and part2 is Dstar
+      if (part2.partType() != o2::aod::femtouniverseparticle::ParticleType::kDstar) {
+        LOG(fatal) << "FemtoUniversePairCleaner: passed arguments don't agree with FemtoUniversePairCleaner instantiation! Please provide second argument kDstar candidate.";
+        return false;
+      }
+      // Getting Dstar (part2) children
+      const auto& posChild = particles.iteratorAt(part2.index() - 3);
+      const auto& negChild = particles.iteratorAt(part2.index() - 2);
+      const auto& softPi = particles.iteratorAt(part2.index() - 1);
+
+      if (part1.globalIndex() != posChild.globalIndex() && part1.globalIndex() != negChild.globalIndex() && part1.globalIndex() != softPi.globalIndex()) {
+        return true;
+      }
+      return false;
     } else {
       LOG(fatal) << "FemtoUniversePairCleaner: Combination of objects not defined - quitting!";
       return false;
